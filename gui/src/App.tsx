@@ -43,6 +43,7 @@ export function App() {
   const { terminales, pestana, setPestana, cerrarTerminal } = usePanel();
   const nodos = useLab((s) => s.nodos);
   const seleccionObs = useSimulacion((s) => s.seleccion);
+  const nObservaciones = useSimulacion((s) => s.observaciones.length);
   const archivo = useRef<HTMLInputElement>(null);
   useBucleAnimacion();
 
@@ -140,7 +141,7 @@ export function App() {
       <section className="inferior">
         <nav className="pestanas">
           <button className={pestana === 'eventos' ? 'activa' : ''} onClick={() => setPestana('eventos')}>
-            Eventos {captura ? `(${captura.observaciones})` : ''}
+            Eventos {captura ? `(${nObservaciones})` : ''}
           </button>
           {terminales.map((t) => (
             <span key={t} className={`pestana-term ${pestana === t ? 'activa' : ''}`}>
