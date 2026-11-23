@@ -1,0 +1,23 @@
+minired
+Copyright (c) 2026, Fosshlab Academy
+Distribuido bajo la licencia BSD-3-Clause (ver LICENSE).
+
+Este producto usa como motor, sin incluir ni copiar su código:
+
+  Mininet - https://github.com/mininet/mininet
+  BSD 3-Clause License (autores originales: Bob Lantz y Brandon Heller).
+  Copyright (c) 2013-2022 Open Networking Foundation.
+  Copyright (c) 2009-2012 Bob Lantz and The Board of Trustees of The Leland Stanford
+  Junior University.
+  minired trabaja sobre el fork educativo https://github.com/mendezgarabetti/mininet,
+  que conserva la licencia y los créditos de Mininet.
+
+Inspiración (ideas reimplementadas, sin código copiado):
+
+  mininet-gui (latarc/mininet-gui), BSD-3-Clause: terminal por PTY dentro del
+  namespace del nodo y captura en cada extremo de un par veth.
+
+Dependencias de terceros, instaladas aparte con sus propias licencias:
+  FastAPI, Starlette, Uvicorn, Pydantic (MIT/BSD); React, React Flow (@xyflow/react),
+  xterm.js, zustand (MIT). Programas invocados como procesos externos: tcpdump (BSD-3-Clause),
+  tshark/Wireshark (GPL-2.0-or-later), Open vSwitch (Apache-2.0).

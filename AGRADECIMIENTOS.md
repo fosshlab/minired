@@ -1,6 +1,6 @@
 # Agradecimientos
 
-- **Mininet** (https://github.com/mininet/mininet), licencia propia de tipo BSD: minired usa el
+- **Mininet** (https://github.com/mininet/mininet), BSD-3-Clause: minired usa el
   fork https://github.com/mendezgarabetti/mininet como motor. No se copia su código.
 - **latarc/mininet-gui** (BSD-3-Clause): inspiración para la terminal por PTY dentro del
   namespace y para capturar en cada extremo de veth. Se reimplementaron las ideas, sin copiar código.

@@ -1,0 +1,10 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+*.pcap
+*.pcapng
+captura.log
+*.egg-info/
+.venv/
+build/
+dist/
