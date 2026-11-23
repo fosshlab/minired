@@ -151,7 +151,7 @@ class RedMininet:
                 nombre = nombre_subintf(nodo, intf.puerto, sub.vlan)
                 self._ejecutar(n, ['ip', 'link', 'add', 'link', base, 'name', nombre,
                                    'type', 'vlan', 'id', str(sub.vlan)])
-                self._ejecutar(n, ['sysctl', '-qw', 'net.ipv6.conf.%s.disable_ipv6=1' % nombre])
+                self._ejecutar(n, ['sysctl', '-qw', 'net/ipv6/conf/%s/disable_ipv6=1' % nombre])
                 if ethtool:
                     self._ejecutar(n, [ethtool, '-K', nombre, 'tx', 'off', 'rx', 'off'], tolerar=True)
                 self._ejecutar(n, ['ip', 'addr', 'add', str(sub.ip), 'dev', nombre])
@@ -164,9 +164,10 @@ class RedMininet:
         os.makedirs(d, mode=0o700, exist_ok=True)
         return d
 
-    def _lanzar(self, n, argv, log):
+    def _lanzar(self, n, argv, log, env=None):
         with open(log, 'ab') as salida:
-            p = n.popen(argv, stdin=subprocess.DEVNULL, stdout=salida, stderr=subprocess.STDOUT)
+            p = n.popen(argv, stdin=subprocess.DEVNULL, stdout=salida, stderr=subprocess.STDOUT,
+                        **({'env': env} if env else {}))
         self._procesos.append(p)
         return p
 
@@ -207,7 +208,8 @@ class RedMininet:
         for nodo in lab.nodos:
             if nodo.dhcp:
                 self._lanzar(self._nodos[nodo.id], self._argv_dhcp(nodo),
-                             os.path.join(self._dir_nodo(nodo), 'dhcp.log'))
+                             os.path.join(self._dir_nodo(nodo), 'dhcp.log'),
+                             env=dict(os.environ, **self._entorno_dhcp(nodo)))
 
     def _argv_dhcp(self, nodo):
         return sv.argv_udhcpc(nombre_intf(nodo, 0), self.directorio)
