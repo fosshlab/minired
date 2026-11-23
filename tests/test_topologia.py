@@ -102,3 +102,65 @@ def test_router_redes_superpuestas_y_switch_sin_ip():
 def test_campos_extra_rechazados():
     with pytest.raises(ValidationError):
         Lab.model_validate({'version': 1, 'nodos': [dict(pc('n1', 'pc1'), cmd='id')]})
+
+
+# --- etapa 3 -----------------------------------------------------------------
+
+from escenarios import lab_nat_acl, lab_ospf, lab_servicios, lab_vlan  # noqa: E402
+from minired.modelo.topologia import ips_nodo  # noqa: E402
+
+
+@pytest.mark.parametrize('fabrica', [lab_vlan, lab_ospf, lab_servicios, lab_nat_acl])
+def test_escenarios_etapa3_validos(fabrica):
+    lab_ = fabrica()
+    assert planificar(lab_).enlaces
+
+
+def test_subinterfaces_en_ips_del_router():
+    r = lab_vlan().nodo('r')
+    assert [(n, str(ip)) for n, ip in ips_nodo(r)] == [
+        ('vr-eth0.10', '10.10.0.254/24'), ('vr-eth0.20', '10.20.0.254/24')]
+
+
+def _errores(nodos, enlaces=()):
+    with pytest.raises(ValidationError) as e:
+        lab(nodos, enlaces)
+    return str(e.value)
+
+
+def router(id_, nombre, interfaces, **extra):
+    return {'id': id_, 'tipo': 'router', 'nombre': nombre, 'interfaces': interfaces, **extra}
+
+
+@pytest.mark.parametrize('nodos,esperado', [
+    ([dict(pc('a', 'pc1', '10.0.0.1/24'), interfaces=[{'puerto': 0, 'ip': '10.0.0.1/24', 'vlan': 10}])],
+     'se configuran en puertos de switch'),
+    ([dict(sw('s', 's1'), interfaces=[{'puerto': 1, 'vlan': 10, 'troncal': [10]}])], 'no las dos cosas'),
+    ([dict(sw('s', 's1'), interfaces=[{'puerto': 1, 'troncal': [10, 10]}])], 'VLAN repetida'),
+    ([dict(sw('s', 's1'), interfaces=[{'puerto': 1, 'troncal': [5000]}])], 'de 1 a 4094'),
+    ([router('r', 'r1', [{'puerto': 0, 'ip': '10.0.0.1/24'}], ospf=True)], 'OSPF necesita FRR'),
+    ([router('r', 'r1', [{'puerto': 0, 'ip': '10.0.0.1/24'}],
+             rutas=[{'destino': '10.9.0.0/16', 'via': '10.1.0.1'}])], 'ninguna red conectada'),
+    ([router('r', 'r1', [{'puerto': 0, 'ip': '10.0.0.1/24'}],
+             rutas=[{'destino': '10.9.0.1/16', 'via': '10.0.0.2'}])], 'not a valid IPv4 network'),
+    ([router('r', 'router12', [{'puerto': 0, 'subinterfaces': [{'vlan': 4000, 'ip': '10.0.0.1/24'}]}])],
+     'supera 15 caracteres'),
+    ([router('r', 'r1', [{'puerto': 0, 'subinterfaces': [{'vlan': 10, 'ip': '10.0.0.1/24'},
+                                                          {'vlan': 20, 'ip': '10.0.0.2/25'}]}])],
+     'redes superpuestas'),
+    ([router('r', 'r1', [{'puerto': 0, 'ip': '10.0.0.1/24', 'nat': 'interior'}])],
+     'una interfaz interior y una exterior'),
+    ([router('r', 'r1', [{'puerto': 0, 'ip': '10.0.0.1/24', 'acl_entrada': [
+        {'accion': 'denegar', 'protocolo': 'icmp', 'puerto': 80}]}])], 'solo vale para tcp o udp'),
+    ([dict(pc('a', 'pc1', '10.0.0.1/24'), dhcp=True)], 'dejalos vacíos'),
+    ([dict(pc('a', 'pc1', '10.0.0.1/24'), servicios={'http': True})], 'van en un servidor'),
+    ([{'id': 's', 'tipo': 'servidor', 'nombre': 'srv', 'servicios': {'http': True}}], 'IP fija'),
+    ([{'id': 's', 'tipo': 'servidor', 'nombre': 'srv', 'interfaces': [{'puerto': 0, 'ip': '10.0.0.1/24'}],
+       'servicios': {'dhcp': {'desde': '10.0.1.10', 'hasta': '10.0.1.20'}}}], 'en la red del servidor'),
+    ([{'id': 's', 'tipo': 'servidor', 'nombre': 'srv', 'interfaces': [{'puerto': 0, 'ip': '10.0.0.15/24'}],
+       'servicios': {'dhcp': {'desde': '10.0.0.10', 'hasta': '10.0.0.20'}}}], 'dentro del rango'),
+    ([{'id': 's', 'tipo': 'servidor', 'nombre': 'srv', 'interfaces': [{'puerto': 0, 'ip': '10.0.0.1/24'}],
+       'servicios': {'dns': [{'nombre': 'Web;rm', 'ip': '10.0.0.1'}]}}], 'should match pattern'),
+])
+def test_errores_etapa3(nodos, esperado):
+    assert esperado in _errores(nodos)
