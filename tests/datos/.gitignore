@@ -1,0 +1,2 @@
+# Capturas reales grabadas en la VM para las pruebas (el .gitignore raíz ignora *.pcap)
+!*.pcap

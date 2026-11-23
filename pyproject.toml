@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "minired"
+version = "0.3.0.dev0"
+description = "Capa educativa sobre Mininet: editor web de redes y modo simulación con tráfico real"
+readme = "README.md"
+license = { text = "BSD-3-Clause" }
+requires-python = ">=3.10"
+# Mininet (fork mendezgarabetti/mininet 2.3.1b4+edu.1) es un requisito externo:
+# se instala desde su repositorio, no desde PyPI. tcpdump y tshark son binarios del sistema.
+dependencies = [
+    "fastapi==0.128.8",
+    "starlette==0.52.1",
+    "uvicorn[standard]==0.40.0",
+    "pydantic==2.12.5",
+]
+
+[project.optional-dependencies]
+pruebas = ["pytest==8.4.2", "httpx==0.28.1"]
+
+[project.scripts]
+minired = "minired.__main__:main"
+
+[tool.setuptools.packages.find]
+include = ["minired*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["root: requiere root, Mininet, OVS, tcpdump y tshark (correr en la VM de laboratorio)"]
