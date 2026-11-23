@@ -272,6 +272,8 @@ def _errores_vlan_puerto(nodo, intf, nintf):
     if intf.vlan is not None and intf.troncal is not None:
         errores.append('%s: un puerto es de acceso (VLAN) o troncal, no las dos cosas' % nintf)
     if intf.troncal is not None:
+        if not intf.troncal:
+            errores.append('%s: la troncal necesita al menos una VLAN permitida' % nintf)
         if any(not 1 <= v <= 4094 for v in intf.troncal):
             errores.append('%s: las VLAN van de 1 a 4094' % nintf)
         if len(set(intf.troncal)) != len(intf.troncal):

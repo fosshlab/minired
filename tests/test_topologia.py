@@ -138,6 +138,7 @@ def router(id_, nombre, interfaces, **extra):
     ([dict(sw('s', 's1'), interfaces=[{'puerto': 1, 'vlan': 10, 'troncal': [10]}])], 'no las dos cosas'),
     ([dict(sw('s', 's1'), interfaces=[{'puerto': 1, 'troncal': [10, 10]}])], 'VLAN repetida'),
     ([dict(sw('s', 's1'), interfaces=[{'puerto': 1, 'troncal': [5000]}])], 'de 1 a 4094'),
+    ([dict(sw('s', 's1'), interfaces=[{'puerto': 1, 'troncal': []}])], 'al menos una VLAN'),
     ([router('r', 'r1', [{'puerto': 0, 'ip': '10.0.0.1/24'}], ospf=True)], 'OSPF necesita FRR'),
     ([router('r', 'r1', [{'puerto': 0, 'ip': '10.0.0.1/24'}],
              rutas=[{'destino': '10.9.0.0/16', 'via': '10.1.0.1'}])], 'ninguna red conectada'),
