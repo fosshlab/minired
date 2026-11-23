@@ -193,6 +193,17 @@ class Controlador:
             raise Conflicto('solo PC y routers hacen ping')
         return await self.worker.run(lambda: self.red.ping(nodo_id, destino, cantidad))
 
+    async def dhcp(self, nodo_id):
+        self._exigir_activa()
+        nodo = self.lab.nodo(nodo_id)
+        if nodo is None or not nodo.dhcp:
+            raise Conflicto('esa PC no está configurada para pedir IP por DHCP')
+        return await self.worker.run(lambda: self.red.dhcp(nodo_id))
+
+    async def diagnostico(self, nodo_id):
+        self._exigir_activa()
+        return await self.worker.run(lambda: self.red.diagnostico(nodo_id))
+
     async def enlace(self, enlace_id, arriba):
         self._exigir_activa()
         if enlace_id not in self.plan.enlaces:
