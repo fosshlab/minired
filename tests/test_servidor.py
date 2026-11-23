@@ -166,3 +166,15 @@ def test_terminal_pty(cliente):
         assert b'42' in salida and b'30 100' in salida
     ctl = cliente.app.state.controlador
     assert ctl.terminales == set()
+
+
+def test_ws_eventos_libera_al_desconectar(cliente):
+    ctl = cliente.app.state.controlador
+    with cliente.websocket_connect('ws://127.0.0.1:8787/ws/eventos', headers={'origin': ORIGEN},
+                                   subprotocols=WS_PROTO) as ws:
+        ws.receive_json()
+        assert len(ctl.bus.colas) == 1
+    limite = time.monotonic() + 3
+    while ctl.bus.colas and time.monotonic() < limite:
+        time.sleep(0.05)
+    assert ctl.bus.colas == set()

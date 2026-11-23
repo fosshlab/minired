@@ -214,6 +214,14 @@ def crear_app(controlador, config):
     async def ws_eventos(ws: WebSocket):
         await ws.accept(subprotocol=SUBPROTOCOLO)
         cola = controlador.bus.suscribir()
+
+        async def hasta_desconectar():
+            # Sin esto, un cliente que se va deja la tarea esperando la cola para siempre
+            # (y uvicorn no termina al apagarse).
+            while (await ws.receive())['type'] != 'websocket.disconnect':
+                pass
+
+        desconexion = asyncio.create_task(hasta_desconectar())
         try:
             await ws.send_json(controlador.estado_dict())
             if controlador.captura is not None:
@@ -222,15 +230,21 @@ def crear_app(controlador, config):
                                     'descartadas_vista': controlador.captura.descartadas_vista})
             avisados = 0
             while True:
-                msg = await cola.get()
+                siguiente = asyncio.create_task(cola.get())
+                await asyncio.wait({siguiente, desconexion}, return_when=asyncio.FIRST_COMPLETED)
+                if desconexion.done():
+                    siguiente.cancel()
+                    return
+                msg = siguiente.result()
                 if cola.perdidos != avisados:
                     avisados = cola.perdidos
                     await ws.send_json({'tipo': 'aviso', 'perdidos': avisados,
                                         'texto': 'la vista en vivo perdió eventos; se recarga la lista'})
                 await ws.send_json(msg)
-        except WebSocketDisconnect:
+        except (WebSocketDisconnect, RuntimeError):
             pass
         finally:
+            desconexion.cancel()
             controlador.bus.desuscribir(cola)
 
     @app.websocket('/ws/terminal/{nodo_id}')
