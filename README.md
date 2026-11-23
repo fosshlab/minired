@@ -25,13 +25,24 @@ Funciona y está probado con root en una VM de laboratorio:
   (una interfaz por extremo). Lo que no se puede correlacionar se muestra como observación suelta:
   no se inventan paquetes.
 
-Todavía no: VLAN, FRR, DHCP/DNS, NAT/ACL (próxima etapa) ni edición con la red en marcha.
+Prácticas tipo CCNA (etapa 3), cada una con un ejemplo listo en el menú **Ejemplos** y una prueba
+con root que también verifica que no quedan restos:
+
+- VLAN de acceso y troncales 802.1Q en OVS, e inter-VLAN con router-on-a-stick (subinterfaces).
+- Router con FRRouting aislado por namespace: `vtysh`, rutas estáticas y OSPF.
+- Servidor con DHCP y DNS (dnsmasq) y HTTP; PC que piden IP por DHCP.
+- NAT (PAT) y ACL de entrada con nftables, con contadores visibles.
+
+La simulación muestra la etiqueta VLAN de cada trama, decodifica DHCP, DNS, HTTP y OSPF y sigue un
+paquete a través de un NAT (con confianza "baja"). Todavía no: STP, LACP, IPv6 ni edición con la red
+en marcha.
 
 ## Requisitos
 
 Una VM o máquina Linux dedicada (probado en Ubuntu 24.04) con:
 
 - el fork de Mininet instalado, Open vSwitch, tcpdump, tshark y ethtool;
+- para la etapa 3: FRRouting (`frr`), dnsmasq, nftables, busybox y curl;
 - Python 3.10 o posterior y, para compilar la interfaz, Node.js 18 o posterior.
 
 Minired necesita root (crea namespaces, veth y bridges): usalo en una VM de laboratorio,
