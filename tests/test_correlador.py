@@ -124,3 +124,62 @@ def test_router_reenvio_con_ttl():
     c.agregar(salida2)
     o = c.confirmar_todo()[0]
     assert o.padre is None and o.confianza == ALTA and o.paquete != conf[0].paquete
+
+
+# --- etapa 3: troncales, router-on-a-stick y NAT (tramas sintéticas) ---------
+
+import tramas as T  # noqa: E402
+from minired.captura.correlador import BAJA, MEDIA  # noqa: E402
+from minired.modelo.topologia import TipoNodo  # noqa: E402
+
+MS = 1_000_000
+
+
+def _obs(seq, ms, enlace, nodo, emisor, datos):
+    return Observacion(seq, ms * MS, enlace, 'b', nodo, emisor, '%s-x' % nodo, datos, len(datos),
+                       'x.pcap', seq, decodificar(datos))
+
+
+def test_troncal_y_router_on_a_stick():
+    """v1 (VLAN 10) → sa → vr (troncal, etiqueta 10) → sa (etiqueta 20) → v3 (VLAN 20)."""
+    tipos_ = {'v1': TipoNodo.pc, 'v3': TipoNodo.pc, 'sa': TipoNodo.switch, 'r': TipoNodo.router}
+    mv1, mr, mv3 = '02:00:00:00:01:00', '02:00:00:00:09:00', '02:00:00:00:03:00'
+    ida = T.ipv4('10.10.0.1', '10.20.0.1', 1, T.icmp_eco(), ttl=64)
+    ruteado = T.ipv4('10.10.0.1', '10.20.0.1', 1, T.icmp_eco(), ttl=63)
+    obs = [
+        _obs(1, 0, 'e1', 'sa', 'v1', T.eth(mr, mv1, 0x0800, ida)),
+        _obs(2, 1, 'e4', 'r', 'sa', T.eth(mr, mv1, 0x0800, ida, vlan=10)),
+        _obs(3, 2, 'e4', 'sa', 'r', T.eth(mv3, mr, 0x0800, ruteado, vlan=20)),
+        _obs(4, 3, 'e2', 'v3', 'sa', T.eth(mv3, mr, 0x0800, ruteado)),
+    ]
+    c = Correlador(tipos_)
+    for o in reversed(obs):
+        c.agregar(o)
+    conf = c.confirmar_todo()
+    assert len({o.paquete for o in conf}) == 1
+    assert [(o.id, o.padre, o.confianza, o.profundidad) for o in conf] == [
+        ('o1', None, ALTA, 0), ('o2', 'o1', ALTA, 1), ('o3', 'o2', MEDIA, 2), ('o4', 'o3', ALTA, 3)]
+
+
+def test_switch_no_reenvia_por_el_puerto_de_entrada():
+    tipos_ = {'a': TipoNodo.pc, 'sw': TipoNodo.switch}
+    t = T.eth('ff:ff:ff:ff:ff:ff', '02:00:00:00:01:00', 0x0806, b'\0' * 28)
+    c = Correlador(tipos_)
+    c.agregar(_obs(1, 0, 'e1', 'sw', 'a', t))
+    c.agregar(_obs(2, 1, 'e1', 'a', 'sw', t))
+    assert [o.confianza for o in c.confirmar_todo()] == [ALTA, SIN_CORRELACIONAR]
+
+
+def test_nat_se_correlaciona_con_confianza_baja():
+    tipos_ = {'n1': TipoNodo.pc, 'r': TipoNodo.router, 'web': TipoNodo.servidor}
+    ida = T.ipv4('10.40.0.1', '203.0.113.10', 1, T.icmp_eco(ident=7), ttl=64)
+    traducido = T.ipv4('203.0.113.1', '203.0.113.10', 1, T.icmp_eco(ident=40001), ttl=63)
+    otro = T.ipv4('203.0.113.1', '203.0.113.10', 1, T.icmp_eco(ident=40001, seq=9), ttl=63)
+    c = Correlador(tipos_)
+    for o in [_obs(1, 0, 'e3', 'r', 'n1', T.eth('02:00:00:00:09:00', '02:00:00:00:01:00', 0x0800, ida)),
+              _obs(2, 1, 'e4', 'web', 'r', T.eth('02:00:00:00:0a:00', '02:00:00:00:09:01', 0x0800, traducido)),
+              _obs(3, 2, 'e4', 'web', 'r', T.eth('02:00:00:00:0a:00', '02:00:00:00:09:01', 0x0800, otro))]:
+        c.agregar(o)
+    conf = c.confirmar_todo()
+    assert [(o.padre, o.confianza) for o in conf] == [(None, ALTA), ('o1', BAJA), (None, ALTA)]
+    assert decodificar(conf[1].datos)['ip']['src'] == '203.0.113.1'

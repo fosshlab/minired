@@ -78,3 +78,59 @@ def test_pcapng_bloques():
     assert struct.unpack('<I', b[:4])[0] == 0x0A0D0D0A
     assert b'xs1-eth1' in b and b'o1 p1' in b
     assert len(b) % 4 == 0
+
+
+# --- etapa 3: DHCP, DNS, HTTP, OSPF y claves de VLAN/NAT ---------------------
+
+import tramas as T  # noqa: E402
+from minired.captura.decodificar import clave_conmutada, clave_nat  # noqa: E402
+
+BC = 'ff:ff:ff:ff:ff:ff'
+M1, M2 = '02:00:00:00:01:00', '02:00:00:00:02:00'
+
+
+def test_dhcp_discover_y_offer():
+    d = decodificar(T.eth(BC, M1, 0x0800, T.ipv4('0.0.0.0', '255.255.255.255', 17, T.udp(68, 67, T.dhcp(1)))))
+    assert d['protocolo'] == 'dhcp' and d['dhcp']['tipo'] == 1
+    assert d['info'] == 'DHCP Discover xid 0xabcdef01'
+    o = decodificar(T.eth(M1, M2, 0x0800, T.ipv4('10.30.0.1', '10.30.0.100', 17,
+                                                  T.udp(67, 68, T.dhcp(2, yiaddr='10.30.0.100')))))
+    assert o['info'] == 'DHCP Offer xid 0xabcdef01: ofrece 10.30.0.100 a 02:00:00:00:05:00'
+    r = decodificar(T.eth(BC, M1, 0x0800, T.ipv4('0.0.0.0', '255.255.255.255', 17,
+                                                  T.udp(68, 67, T.dhcp(3, pedida='10.30.0.100')))))
+    assert r['info'].endswith('pide 10.30.0.100')
+
+
+def test_dns_consulta_y_respuesta():
+    q = decodificar(T.eth(M2, M1, 0x0800, T.ipv4('10.30.0.100', '10.30.0.1', 17, T.udp(40000, 53, T.dns(9, 'web.lab')))))
+    assert q['protocolo'] == 'dns' and q['info'] == 'DNS consulta A web.lab'
+    r = decodificar(T.eth(M1, M2, 0x0800, T.ipv4('10.30.0.1', '10.30.0.100', 17,
+                                                  T.udp(53, 40000, T.dns(9, 'web.lab', '10.30.0.1')))))
+    assert r['info'] == 'DNS respuesta A web.lab → 10.30.0.1' and r['dns']['respuestas'] == ['10.30.0.1']
+
+
+def test_http_y_ospf():
+    h = decodificar(T.eth(M2, M1, 0x0800, T.ipv4('10.0.0.1', '10.0.0.2', 6,
+                                                  T.tcp(40000, 80, b'GET / HTTP/1.1\r\nHost: web.lab\r\n\r\n'))))
+    assert h['protocolo'] == 'http' and h['info'] == '10.0.0.1 → 10.0.0.2 HTTP GET / HTTP/1.1'
+    o = decodificar(T.eth('01:00:5e:00:00:05', M1, 0x0800, T.ipv4('10.60.0.1', '224.0.0.5', 89, bytes([2, 1]) + b'\0' * 42)))
+    assert o['protocolo'] == 'ospf' and o['info'].endswith('OSPF Hello')
+
+
+def test_clave_conmutada_ignora_etiqueta_y_relleno():
+    ip = T.ipv4('10.10.0.1', '10.10.0.2', 1, T.icmp_eco(datos=b''))
+    sin = T.eth(M2, M1, 0x0800, ip)                 # 60 bytes con relleno
+    con = T.eth(M2, M1, 0x0800, ip, vlan=10) + bytes(4)   # OVS agrega 4 bytes de etiqueta: 64
+    assert len(sin) == 60 and len(con) == 64 and sin != con
+    assert clave_conmutada(sin) == clave_conmutada(con)
+    assert clave_conmutada(sin) != clave_conmutada(T.eth(M2, M1, 0x0800, T.ipv4('10.10.0.1', '10.10.0.3', 1, T.icmp_eco(datos=b''))))
+    assert decodificar(con)['vlan']['id'] == 10
+
+
+def test_clave_nat_ignora_direccion_y_identificador():
+    antes = T.eth(M2, M1, 0x0800, T.ipv4('10.40.0.1', '203.0.113.10', 1, T.icmp_eco(ident=7), ttl=64))
+    despues = T.eth(M1, M2, 0x0800, T.ipv4('203.0.113.1', '203.0.113.10', 1, T.icmp_eco(ident=31000), ttl=63))
+    ka, kd = clave_nat(antes), clave_nat(despues)
+    assert ka[0] == kd[0] and ka[1] == kd[1] + 1
+    otro = T.eth(M1, M2, 0x0800, T.ipv4('203.0.113.1', '203.0.113.10', 1, T.icmp_eco(ident=31000, seq=2), ttl=63))
+    assert clave_nat(otro)[0] != ka[0]
