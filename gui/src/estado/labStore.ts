@@ -1,14 +1,17 @@
 import { create } from 'zustand';
-import type { Enlace, EstadoCaptura, EstadoRed, Lab, Nodo, TipoNodo } from '../api/tipos';
+import type { Enlace, EstadoCaptura, EstadoRed, Interfaz, Lab, Nodo, TipoNodo } from '../api/tipos';
+import { ejemplo3Pc } from './ejemplos';
+export { EJEMPLOS, ejemplo3Pc } from './ejemplos';
 
 // Puertos por tipo (igual que PUERTOS en el backend). Nombre Linux: <nombre>-eth<puerto>.
 export const PUERTOS: Record<TipoNodo, number[]> = {
   pc: [0],
   switch: Array.from({ length: 16 }, (_, i) => i + 1),
   router: Array.from({ length: 8 }, (_, i) => i),
+  servidor: [0],
 };
 
-const PREFIJO: Record<TipoNodo, string> = { pc: 'pc', switch: 's', router: 'r' };
+const PREFIJO: Record<TipoNodo, string> = { pc: 'pc', switch: 's', router: 'r', servidor: 'srv' };
 const GUARDADO = 'minired.lab';
 
 export type Seleccion = { tipo: 'nodo' | 'enlace'; id: string } | null;
@@ -27,6 +30,7 @@ interface EstadoLab {
   moverNodo: (id: string, x: number, y: number) => void;
   actualizarNodo: (id: string, cambio: Partial<Nodo>) => void;
   ponerIp: (id: string, puerto: number, ip: string) => void;
+  editarInterfaz: (id: string, puerto: number, cambio: Partial<Interfaz>) => void;
   conectar: (origen: string, destino: string) => void;
   borrarSeleccion: () => void;
   seleccionar: (s: Seleccion) => void;
@@ -51,6 +55,17 @@ function siguienteIpPc(nodos: Nodo[]) {
   return null;
 }
 
+function limpiarInterfaz(i: Interfaz): Interfaz {
+  const r: Interfaz = { puerto: i.puerto };
+  if (i.ip) r.ip = i.ip;
+  if (i.vlan != null) r.vlan = i.vlan;
+  if (i.troncal != null) r.troncal = i.troncal;
+  if (i.subinterfaces?.length) r.subinterfaces = i.subinterfaces;
+  if (i.nat) r.nat = i.nat;
+  if (i.acl_entrada?.length) r.acl_entrada = i.acl_entrada;
+  return r;
+}
+
 export function puertoLibre(nodo: Nodo, enlaces: Enlace[]): number | null {
   const usados = new Set(
     enlaces.flatMap((e) => [e.a, e.b]).filter((x) => x.nodo === nodo.id).map((x) => x.puerto));
@@ -61,6 +76,10 @@ export function nombreIntf(nodo: Nodo | undefined, puerto: number) {
   return nodo ? `${nodo.nombre}-eth${puerto}` : `?-eth${puerto}`;
 }
 
+export function interfazDe(nodo: Nodo | undefined, puerto: number): Interfaz {
+  return nodo?.interfaces.find((i) => i.puerto === puerto) ?? { puerto };
+}
+
 function leerGuardado(): Lab | null {
   try {
     const t = localStorage.getItem(GUARDADO);
@@ -69,21 +88,6 @@ function leerGuardado(): Lab | null {
     return null;
   }
 }
-
-export const ejemplo3Pc: Lab = {
-  version: 1,
-  nodos: [
-    { id: 'n1', tipo: 'switch', nombre: 's1', x: 300, y: 120, interfaces: [] },
-    { id: 'n2', tipo: 'pc', nombre: 'pc1', x: 80, y: 300, interfaces: [{ puerto: 0, ip: '10.0.0.1/24' }] },
-    { id: 'n3', tipo: 'pc', nombre: 'pc2', x: 300, y: 330, interfaces: [{ puerto: 0, ip: '10.0.0.2/24' }] },
-    { id: 'n4', tipo: 'pc', nombre: 'pc3', x: 520, y: 300, interfaces: [{ puerto: 0, ip: '10.0.0.3/24' }] },
-  ],
-  enlaces: [
-    { id: 'e1', a: { nodo: 'n2', puerto: 0 }, b: { nodo: 'n1', puerto: 1 } },
-    { id: 'e2', a: { nodo: 'n3', puerto: 0 }, b: { nodo: 'n1', puerto: 2 } },
-    { id: 'e3', a: { nodo: 'n4', puerto: 0 }, b: { nodo: 'n1', puerto: 3 } },
-  ],
-};
 
 const inicial = leerGuardado() ?? ejemplo3Pc;
 
@@ -102,7 +106,7 @@ export const useLab = create<EstadoLab>((set, get) => ({
       id: siguienteId('n', s.nodos.map((n) => n.id)), tipo, nombre: siguienteNombre(s.nodos, tipo),
       x, y, interfaces: [],
     };
-    if (tipo === 'pc') {
+    if (tipo === 'pc' || tipo === 'servidor') {
       const ip = siguienteIpPc(s.nodos);
       if (ip) nodo.interfaces = [{ puerto: 0, ip }];
     }
@@ -117,11 +121,16 @@ export const useLab = create<EstadoLab>((set, get) => ({
     nodos: s.nodos.map((n) => (n.id === id ? { ...n, ...cambio } : n)),
   })),
 
-  ponerIp: (id, puerto, ip) => set((s) => ({
+  ponerIp: (id, puerto, ip) => get().editarInterfaz(id, puerto, { ip: ip.trim() || null }),
+
+  // Cambia una interfaz (la crea si hace falta) y quita las que quedan sin ningún dato.
+  editarInterfaz: (id, puerto, cambio) => set((s) => ({
     nodos: s.nodos.map((n) => {
       if (n.id !== id) return n;
+      const actual = n.interfaces.find((i) => i.puerto === puerto) ?? { puerto };
+      const nueva = limpiarInterfaz({ ...actual, ...cambio });
       const resto = n.interfaces.filter((i) => i.puerto !== puerto);
-      const interfaces = ip.trim() ? [...resto, { puerto, ip: ip.trim() }] : resto;
+      const interfaces = Object.keys(nueva).length > 1 ? [...resto, nueva] : resto;
       return { ...n, interfaces: interfaces.sort((a, b) => a.puerto - b.puerto) };
     }),
   })),

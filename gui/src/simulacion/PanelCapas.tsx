@@ -5,7 +5,7 @@ import { useLab } from '../estado/labStore';
 import { useSimulacion } from '../estado/simulacionStore';
 import { EXPLICACIONES } from './explicaciones';
 
-const ABIERTAS_INICIO = new Set(['eth', 'arp', 'ip', 'icmp', 'udp', 'tcp']);
+const ABIERTAS_INICIO = new Set(['eth', 'vlan', 'arp', 'ip', 'icmp', 'udp', 'tcp', 'dhcp', 'dns', 'http', 'ospf']);
 
 export function PanelCapas() {
   const seleccion = useSimulacion((s) => s.seleccion);
@@ -44,6 +44,12 @@ export function PanelCapas() {
       )}
       {obs.confianza === 'media' && (
         <p className="tenue">Correlacionado a través de un router: mismo paquete IP con TTL una unidad menor y MAC nuevas.</p>
+      )}
+      {obs.confianza === 'baja' && (
+        <p className="tenue">Correlacionado a través de un router con NAT: cambió una dirección IP (y el puerto o el identificador ICMP); coinciden la identificación IP, el largo y los datos.</p>
+      )}
+      {obs.resumen.vlan && (
+        <p className="tenue">Viaja con etiqueta 802.1Q de la VLAN {obs.resumen.vlan.id}: este enlace es una troncal.</p>
       )}
       {error && <p className="aviso">{error}</p>}
       {!detalle && !error && <p className="tenue">Decodificando con tshark…</p>}

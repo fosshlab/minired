@@ -1,6 +1,7 @@
 import { useInternalNode, type Edge, type EdgeProps, type InternalNode } from '@xyflow/react';
 import type { Enlace } from '../api/tipos';
-import { useLab, nombreIntf } from '../estado/labStore';
+import type { Nodo } from '../api/tipos';
+import { interfazDe, useLab, nombreIntf } from '../estado/labStore';
 import { useSimulacion } from '../estado/simulacionStore';
 import { colorProtocolo, etiquetaProtocolo } from '../simulacion/reproductor';
 
@@ -19,6 +20,15 @@ function borde(c: { x: number; y: number; w: number; h: number }, hacia: { x: nu
   if (!dx && !dy) return { x: c.x, y: c.y };
   const esc = Math.min(dx ? (c.w / 2 + 4) / Math.abs(dx) : Infinity, dy ? (c.h / 2 + 4) / Math.abs(dy) : Infinity);
   return { x: c.x + dx * esc, y: c.y + dy * esc };
+}
+
+// "eth1", "eth1 v10" (acceso) o "eth3 T" (troncal).
+function etiquetaPuerto(nodo: Nodo | undefined, puerto: number) {
+  const base = nombreIntf(nodo, puerto).replace(/^.*-/, '');
+  const i = interfazDe(nodo, puerto);
+  if (i.troncal != null) return `${base} T`;
+  if (i.vlan != null) return `${base} v${i.vlan}`;
+  return base;
 }
 
 const suavizar = (t: number) => (t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2);
@@ -54,10 +64,10 @@ export function AristaEnlace({ id, source, target, data, selected }: EdgeProps<A
       {largo > 90 && (
         <>
           <text x={pa.x + ux * 26} y={pa.y + uy * 26 - 6} className="arista-puerto" textAnchor="middle">
-            {nombreIntf(na, enlace.a.puerto).replace(/^.*-/, '')}
+            {etiquetaPuerto(na, enlace.a.puerto)}
           </text>
           <text x={pb.x - ux * 26} y={pb.y - uy * 26 - 6} className="arista-puerto" textAnchor="middle">
-            {nombreIntf(nb, enlace.b.puerto).replace(/^.*-/, '')}
+            {etiquetaPuerto(nb, enlace.b.puerto)}
           </text>
         </>
       )}
@@ -78,6 +88,12 @@ export function AristaEnlace({ id, source, target, data, selected }: EdgeProps<A
             <text x="21" y="16" textAnchor="middle" className="sobre-texto" fill={suelta ? color : '#fff'}>
               {suelta ? '?' : ''}{etiquetaProtocolo(o)}
             </text>
+            {o.resumen.vlan && (
+              <g transform="translate(26,-9)">
+                <rect width="26" height="14" rx="3" fill="#fef3c7" stroke="#92400e" />
+                <text x="13" y="11" textAnchor="middle" className="sobre-vlan">v{o.resumen.vlan.id}</text>
+              </g>
+            )}
           </g>
         );
       })}

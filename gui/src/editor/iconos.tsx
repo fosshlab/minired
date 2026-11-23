@@ -19,6 +19,15 @@ export function Icono({ tipo, tam = 40 }: { tipo: TipoNodo; tam?: number }) {
       </svg>
     );
   }
+  if (tipo === 'servidor') {
+    return (
+      <svg {...comun}>
+        <rect x="9" y="4" width="22" height="32" rx="2" fill="#ede9fe" stroke="#6d28d9" strokeWidth="2" />
+        <path d="M13 12h14M13 19h14M13 26h14" stroke="#6d28d9" strokeWidth="2" strokeLinecap="round" />
+        <circle cx="26" cy="31" r="1.6" fill="#6d28d9" />
+      </svg>
+    );
+  }
   return (
     <svg {...comun}>
       <circle cx="20" cy="20" r="15" fill="#fef3c7" stroke="#b45309" strokeWidth="2" />
@@ -28,4 +37,4 @@ export function Icono({ tipo, tam = 40 }: { tipo: TipoNodo; tam?: number }) {
   );
 }
 
-export const NOMBRE_TIPO: Record<TipoNodo, string> = { pc: 'PC', switch: 'Switch', router: 'Router' };
+export const NOMBRE_TIPO: Record<TipoNodo, string> = { pc: 'PC', switch: 'Switch', router: 'Router', servidor: 'Servidor' };

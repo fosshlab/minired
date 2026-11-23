@@ -2,7 +2,7 @@ import type { TipoNodo } from '../api/tipos';
 import { useLab } from '../estado/labStore';
 import { Icono, NOMBRE_TIPO } from './iconos';
 
-const TIPOS: TipoNodo[] = ['pc', 'switch', 'router'];
+const TIPOS: TipoNodo[] = ['pc', 'switch', 'router', 'servidor'];
 
 export function Paleta() {
   const estado = useLab((s) => s.estadoRed);

@@ -3,7 +3,9 @@ import { useLab } from '../estado/labStore';
 import { useSimulacion } from '../estado/simulacionStore';
 import { colorProtocolo, etiquetaProtocolo, pasaFiltro } from './reproductor';
 
-const CONFIANZA = { alta: 'alta', media: 'media (reenviado por router)', sin_correlacionar: 'suelta' } as const;
+const CONFIANZA = {
+  alta: 'alta', media: 'media (reenviado por router)', baja: 'baja (traducido por NAT)', sin_correlacionar: 'suelta',
+} as const;
 
 export function ListaEventos() {
   const { observaciones, pasos, cursor, seleccion, filtro, elegir } = useSimulacion();

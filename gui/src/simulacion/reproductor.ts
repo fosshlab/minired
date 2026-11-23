@@ -11,7 +11,7 @@ export interface Paso {
   obs: Observacion[];
 }
 
-export type Filtro = 'todos' | 'arp' | 'icmp' | 'ip' | 'otros';
+export type Filtro = 'todos' | 'arp' | 'icmp' | 'ip' | 'dhcp' | 'dns' | 'http' | 'ospf' | 'otros';
 
 export function pasaFiltro(o: Observacion, filtro: Filtro) {
   const capas = o.resumen.capas;
@@ -20,6 +20,7 @@ export function pasaFiltro(o: Observacion, filtro: Filtro) {
     case 'arp': return capas.includes('arp');
     case 'icmp': return capas.includes('icmp');
     case 'ip': return capas.includes('ip');
+    case 'dhcp': case 'dns': case 'http': case 'ospf': return capas.includes(filtro);
     case 'otros': return !capas.includes('arp') && !capas.includes('ip');
   }
 }
@@ -49,6 +50,10 @@ export function indicePasoDe(pasos: Paso[], obsId: string) {
 export function colorProtocolo(o: Observacion) {
   const c = o.resumen.capas;
   if (c.includes('arp')) return '#d97706';
+  if (c.includes('dhcp')) return '#be185d';
+  if (c.includes('dns')) return '#0f766e';
+  if (c.includes('http')) return '#15803d';
+  if (c.includes('ospf')) return '#9333ea';
   if (c.includes('icmp')) return '#2563eb';
   if (c.includes('tcp')) return '#059669';
   if (c.includes('udp')) return '#7c3aed';
@@ -59,6 +64,10 @@ export function colorProtocolo(o: Observacion) {
 export function etiquetaProtocolo(o: Observacion) {
   const c = o.resumen.capas;
   if (c.includes('arp')) return 'ARP';
+  if (c.includes('dhcp')) return 'DHCP';
+  if (c.includes('dns')) return 'DNS';
+  if (c.includes('http')) return 'HTTP';
+  if (c.includes('ospf')) return 'OSPF';
   if (c.includes('icmp')) return 'ICMP';
   if (c.includes('tcp')) return 'TCP';
   if (c.includes('udp')) return 'UDP';

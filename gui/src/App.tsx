@@ -3,7 +3,7 @@ import { ReactFlowProvider } from '@xyflow/react';
 import { api, ErrorApi, token } from './api/cliente';
 import type { Evento, Lab, Observacion } from './api/tipos';
 import { conectarEventos } from './api/ws';
-import { ejemplo3Pc, useLab } from './estado/labStore';
+import { EJEMPLOS, useLab } from './estado/labStore';
 import { usePanel } from './estado/panelStore';
 import { useSimulacion } from './estado/simulacionStore';
 import { Lienzo } from './editor/Lienzo';
@@ -102,7 +102,11 @@ export function App() {
         <span className="marca">minired</span>
         <div className="grupo">
           <button disabled={!diseno} onClick={() => cargar({ version: 1, nodos: [], enlaces: [] })}>Nuevo</button>
-          <button disabled={!diseno} onClick={() => cargar(ejemplo3Pc)}>Ejemplo: 3 PC + switch</button>
+          <select disabled={!diseno} value="" aria-label="Cargar un ejemplo"
+            onChange={(e) => { const ej = EJEMPLOS[Number(e.target.value)]; if (ej) cargar(structuredClone(ej.lab)); }}>
+            <option value="" disabled>Ejemplos…</option>
+            {EJEMPLOS.map((ej, n) => <option key={ej.titulo} value={n}>{ej.titulo}</option>)}
+          </select>
           <button disabled={!diseno} onClick={() => archivo.current?.click()}>Abrir…</button>
           <button onClick={guardarJson}>Guardar</button>
           <input ref={archivo} type="file" accept=".json,application/json" hidden

@@ -44,6 +44,10 @@ export function BarraReproduccion() {
           <option value="arp">ARP</option>
           <option value="icmp">ICMP</option>
           <option value="ip">IPv4</option>
+          <option value="dhcp">DHCP</option>
+          <option value="dns">DNS</option>
+          <option value="http">HTTP</option>
+          <option value="ospf">OSPF</option>
           <option value="otros">otros</option>
         </select>
       </label>

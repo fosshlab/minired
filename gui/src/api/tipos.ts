@@ -1,10 +1,39 @@
 // Espejo de los modelos Pydantic (minired/modelo/topologia.py) y de los eventos del backend.
 
-export type TipoNodo = 'pc' | 'switch' | 'router';
+export type TipoNodo = 'pc' | 'switch' | 'router' | 'servidor';
+
+export interface Subinterfaz {
+  vlan: number;
+  ip: string;
+}
+
+export interface ReglaACL {
+  accion: 'permitir' | 'denegar';
+  protocolo: 'ip' | 'icmp' | 'tcp' | 'udp';
+  origen?: string | null;
+  destino?: string | null;
+  puerto?: number | null;
+}
 
 export interface Interfaz {
   puerto: number;
   ip?: string | null;
+  vlan?: number | null;                 // switch: puerto de acceso
+  troncal?: number[] | null;            // switch: troncal 802.1Q
+  subinterfaces?: Subinterfaz[];        // router
+  nat?: 'interior' | 'exterior' | null; // router
+  acl_entrada?: ReglaACL[];             // router
+}
+
+export interface Ruta {
+  destino: string;
+  via: string;
+}
+
+export interface Servicios {
+  dhcp?: { desde: string; hasta: string; gateway?: string | null; dns?: string | null } | null;
+  dns?: { nombre: string; ip: string }[];
+  http?: boolean;
 }
 
 export interface Nodo {
@@ -15,6 +44,12 @@ export interface Nodo {
   y: number;
   interfaces: Interfaz[];
   gateway?: string | null;
+  dhcp?: boolean;
+  dns?: string | null;
+  servicios?: Servicios | null;
+  rutas?: Ruta[];
+  frr?: boolean;
+  ospf?: boolean;
 }
 
 export interface Extremo {
@@ -46,9 +81,19 @@ export interface Resumen {
   icmp?: { tipo: number; codigo: number; ident?: number; seq?: number };
   udp?: { sport: number; dport: number };
   tcp?: { sport: number; dport: number; banderas: string };
+  vlan?: { id: number; pcp: number };
+  dhcp?: { tipo?: number; xid: string; yiaddr: string; chaddr: string };
+  dns?: { nombre?: string; respuesta: boolean };
+  http?: { linea: string };
+  ospf?: { tipo: number };
 }
 
-export type Confianza = 'alta' | 'media' | 'sin_correlacionar';
+export type Confianza = 'alta' | 'media' | 'baja' | 'sin_correlacionar';
+
+export interface Diagnostico {
+  nodo: string;
+  secciones: { titulo: string; comando: string | null; salida: string }[];
+}
 
 // Un frame REAL capturado al llegar al extremo `hacia` del enlace.
 export interface Observacion {
