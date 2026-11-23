@@ -252,6 +252,8 @@ def crear_app(controlador, config):
     if os.path.isdir(DIST):
         @app.get('/{ruta:path}', include_in_schema=False)
         async def estaticos(ruta: str):
+            if ruta.split('/')[0] in ('api', 'ws'):
+                raise HTTPException(404, 'ruta inexistente')
             destino = os.path.realpath(os.path.join(DIST, ruta))
             if ruta and destino.startswith(os.path.realpath(DIST) + os.sep) and os.path.isfile(destino):
                 return FileResponse(destino)

@@ -22,6 +22,20 @@ def _mac(indice_nodo, puerto):
     return '02:00:00:00:%02x:%02x' % (indice_nodo, puerto)
 
 
+def _clase_router():
+    """Router Linux: un Node en su namespace con reenvío IPv4 (no depende de nodelib.LinuxRouter,
+    que no está en todas las versiones instaladas del fork)."""
+    from mininet.node import Node
+
+    class RouterLinux(Node):
+        def config(self, **params):
+            r = super().config(**params)
+            self.cmd('sysctl -qw net.ipv4.ip_forward=1')
+            return r
+
+    return RouterLinux
+
+
 class RedMininet:
     def __init__(self, plan):
         self.plan = plan
@@ -34,7 +48,6 @@ class RedMininet:
         from mininet.log import setLogLevel
         from mininet.net import Mininet
         from mininet.node import OVSBridge
-        from mininet.nodelib import LinuxRouter
 
         setLogLevel('warning')
         self._verificar_nombres_libres()
@@ -49,7 +62,7 @@ class RedMininet:
                 if nodo.tipo == TipoNodo.pc:
                     n = net.addHost(nodo.nombre, ip=None)
                 elif nodo.tipo == TipoNodo.router:
-                    n = net.addHost(nodo.nombre, cls=LinuxRouter, ip=None)
+                    n = net.addHost(nodo.nombre, cls=_clase_router(), ip=None)
                 else:
                     n = net.addSwitch(nodo.nombre, cls=OVSBridge, dpid=self.plan.dpids[nodo.id])
                 self._nodos[nodo.id] = n

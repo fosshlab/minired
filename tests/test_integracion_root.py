@@ -152,3 +152,36 @@ def test_ping_arp_icmp_capas_pcap_y_limpieza(cliente, tmp_path):
     assert SWITCH not in bridges
     assert procesos('tcpdump -i ti') == []
     assert procesos('bash --norc --noprofile -i') == []
+
+
+def test_router_entre_dos_redes(tmp_path):
+    """pc–router–pc: el eco se correlaciona a través del router (TTL 64 → 63, confianza media)."""
+    from minired.modelo.topologia import Lab
+    lab = Lab.model_validate({'version': 1, 'nodos': [
+        {'id': 'h1', 'tipo': 'pc', 'nombre': 'tq1', 'interfaces': [{'puerto': 0, 'ip': '10.1.1.1/24'}],
+         'gateway': '10.1.1.254'},
+        {'id': 'r', 'tipo': 'router', 'nombre': 'tr1', 'interfaces': [
+            {'puerto': 0, 'ip': '10.1.1.254/24'}, {'puerto': 1, 'ip': '10.1.2.254/24'}]},
+        {'id': 'h2', 'tipo': 'pc', 'nombre': 'tq2', 'interfaces': [{'puerto': 0, 'ip': '10.1.2.1/24'}],
+         'gateway': '10.1.2.254'}],
+        'enlaces': [{'id': 'e1', 'a': {'nodo': 'h1', 'puerto': 0}, 'b': {'nodo': 'r', 'puerto': 0}},
+                    {'id': 'e2', 'a': {'nodo': 'r', 'puerto': 1}, 'b': {'nodo': 'h2', 'puerto': 0}}]})
+    ctl = Controlador(RedMininet, directorio_capturas=str(tmp_path))
+    app = crear_app(ctl, Config(puerto=8787, token=TOKEN))
+    with TestClient(app, base_url='http://127.0.0.1:8787') as c:
+        assert c.put('/api/lab', json=lab.model_dump(mode='json'), headers=AUTH).status_code == 200
+        r = c.post('/api/red/iniciar', headers=AUTH)
+        assert r.status_code == 200, r.text
+        assert c.post('/api/captura/iniciar', headers=AUTH).status_code == 200
+        r = c.post('/api/nodos/h1/ping', json={'destino': '10.1.2.1'}, headers=AUTH).json()
+        assert r['codigo'] == 0, r
+        time.sleep(1)
+        c.post('/api/captura/detener', headers=AUTH)
+        items = c.get('/api/captura/observaciones', headers=AUTH).json()['items']
+        (tmp_path / 'observaciones_router.json').write_text(json.dumps(items, indent=1))
+        eco = [o for o in items if o['resumen'].get('icmp', {}).get('tipo') == 8]
+        assert [(o['enlace'], o['resumen']['ip']['ttl'], o['confianza']) for o in eco] == [
+            ('e1', 64, 'alta'), ('e2', 63, 'media')]
+        assert eco[1]['padre'] == eco[0]['id'] and eco[1]['paquete'] == eco[0]['paquete']
+        assert c.post('/api/red/detener', headers=AUTH).json()['estado'] == 'diseño'
+    assert not [i for i in os.listdir('/sys/class/net') if i.startswith(('tq', 'tr1'))]
