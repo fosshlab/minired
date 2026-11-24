@@ -236,7 +236,8 @@ class Controlador:
             red = self.red
             sesion = self.fabrica_captura(self.plan, lambda nodo, argv, **kw: red.popen(nodo, argv, **kw),
                                           self.publicar, self.directorio_capturas,
-                                          en_espera=set(self.enlaces_caidos))
+                                          en_espera=set(self.enlaces_caidos),
+                                          instantanea=getattr(red, 'instantanea', None))
             try:
                 await self.worker.run(sesion.iniciar)
             except Exception:

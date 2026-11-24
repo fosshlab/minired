@@ -1,0 +1,215 @@
+{
+ "version": 1,
+ "nodos": [
+  {
+   "id": "sa",
+   "tipo": "switch",
+   "nombre": "dsa",
+   "x": 0.0,
+   "y": 0.0,
+   "interfaces": [],
+   "gateway": null,
+   "dhcp": false,
+   "dns": null,
+   "servicios": null,
+   "rutas": [],
+   "frr": false,
+   "ospf": false
+  },
+  {
+   "id": "sb",
+   "tipo": "switch",
+   "nombre": "dsb",
+   "x": 0.0,
+   "y": 0.0,
+   "interfaces": [],
+   "gateway": null,
+   "dhcp": false,
+   "dns": null,
+   "servicios": null,
+   "rutas": [],
+   "frr": false,
+   "ospf": false
+  },
+  {
+   "id": "srva",
+   "tipo": "servidor",
+   "nombre": "da1",
+   "x": 0.0,
+   "y": 0.0,
+   "interfaces": [
+    {
+     "puerto": 0,
+     "ip": "10.30.0.1/24",
+     "vlan": null,
+     "troncal": null,
+     "subinterfaces": [],
+     "nat": null,
+     "acl_entrada": []
+    }
+   ],
+   "gateway": null,
+   "dhcp": false,
+   "dns": "10.30.0.1",
+   "servicios": {
+    "dhcp": {
+     "desde": "10.30.0.100",
+     "hasta": "10.30.0.150",
+     "gateway": "10.30.0.254",
+     "dns": "10.30.0.1"
+    },
+    "dns": [
+     {
+      "nombre": "web.lab",
+      "ip": "10.30.0.1"
+     }
+    ],
+    "http": true
+   },
+   "rutas": [],
+   "frr": false,
+   "ospf": false
+  },
+  {
+   "id": "srvb",
+   "tipo": "servidor",
+   "nombre": "db1",
+   "x": 0.0,
+   "y": 0.0,
+   "interfaces": [
+    {
+     "puerto": 0,
+     "ip": "10.31.0.1/24",
+     "vlan": null,
+     "troncal": null,
+     "subinterfaces": [],
+     "nat": null,
+     "acl_entrada": []
+    }
+   ],
+   "gateway": null,
+   "dhcp": false,
+   "dns": null,
+   "servicios": {
+    "dhcp": {
+     "desde": "10.31.0.200",
+     "hasta": "10.31.0.210",
+     "gateway": null,
+     "dns": null
+    },
+    "dns": [],
+    "http": false
+   },
+   "rutas": [],
+   "frr": false,
+   "ospf": false
+  },
+  {
+   "id": "ca",
+   "tipo": "pc",
+   "nombre": "dc1",
+   "x": 0.0,
+   "y": 0.0,
+   "interfaces": [],
+   "gateway": null,
+   "dhcp": true,
+   "dns": null,
+   "servicios": null,
+   "rutas": [],
+   "frr": false,
+   "ospf": false
+  },
+  {
+   "id": "ca2",
+   "tipo": "pc",
+   "nombre": "dc2",
+   "x": 0.0,
+   "y": 0.0,
+   "interfaces": [],
+   "gateway": null,
+   "dhcp": true,
+   "dns": null,
+   "servicios": null,
+   "rutas": [],
+   "frr": false,
+   "ospf": false
+  },
+  {
+   "id": "cb",
+   "tipo": "pc",
+   "nombre": "dc3",
+   "x": 0.0,
+   "y": 0.0,
+   "interfaces": [],
+   "gateway": null,
+   "dhcp": true,
+   "dns": null,
+   "servicios": null,
+   "rutas": [],
+   "frr": false,
+   "ospf": false
+  }
+ ],
+ "enlaces": [
+  {
+   "id": "e1",
+   "a": {
+    "nodo": "srva",
+    "puerto": 0
+   },
+   "b": {
+    "nodo": "sa",
+    "puerto": 1
+   },
+   "desconectado": false
+  },
+  {
+   "id": "e2",
+   "a": {
+    "nodo": "ca",
+    "puerto": 0
+   },
+   "b": {
+    "nodo": "sa",
+    "puerto": 2
+   },
+   "desconectado": false
+  },
+  {
+   "id": "e3",
+   "a": {
+    "nodo": "ca2",
+    "puerto": 0
+   },
+   "b": {
+    "nodo": "sa",
+    "puerto": 3
+   },
+   "desconectado": false
+  },
+  {
+   "id": "e4",
+   "a": {
+    "nodo": "srvb",
+    "puerto": 0
+   },
+   "b": {
+    "nodo": "sb",
+    "puerto": 1
+   },
+   "desconectado": false
+  },
+  {
+   "id": "e5",
+   "a": {
+    "nodo": "cb",
+    "puerto": 0
+   },
+   "b": {
+    "nodo": "sb",
+    "puerto": 2
+   },
+   "desconectado": false
+  }
+ ]
+}

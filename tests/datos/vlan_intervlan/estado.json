@@ -1,0 +1,334 @@
+{
+ "fin": {
+  "direcciones": {
+   "r": [
+    "10.10.0.254/24",
+    "10.20.0.254/24"
+   ],
+   "v1": [
+    "10.10.0.1/24"
+   ],
+   "v2": [
+    "10.10.0.2/24"
+   ],
+   "v3": [
+    "10.20.0.1/24"
+   ],
+   "v4": [
+    "10.10.0.4/24"
+   ]
+  },
+  "fdb": {
+   "sa": [
+    {
+     "intf": "vsa-eth1",
+     "mac": "02:00:00:00:04:00",
+     "vlan": 10
+    },
+    {
+     "intf": "vsa-eth4",
+     "mac": "02:00:00:00:03:00",
+     "vlan": 10
+    },
+    {
+     "intf": "vsa-eth4",
+     "mac": "02:00:00:00:03:00",
+     "vlan": 20
+    },
+    {
+     "intf": "vsa-eth2",
+     "mac": "02:00:00:00:06:00",
+     "vlan": 20
+    },
+    {
+     "intf": "vsa-eth3",
+     "mac": "02:00:00:00:05:00",
+     "vlan": 10
+    },
+    {
+     "intf": "vsa-eth3",
+     "mac": "02:00:00:00:07:00",
+     "vlan": 20
+    }
+   ],
+   "sb": [
+    {
+     "intf": "vsa-eth3",
+     "mac": "02:00:00:00:04:00",
+     "vlan": 10
+    },
+    {
+     "intf": "vsa-eth3",
+     "mac": "02:00:00:00:03:00",
+     "vlan": 20
+    },
+    {
+     "intf": "vsa-eth1",
+     "mac": "02:00:00:00:05:00",
+     "vlan": 10
+    },
+    {
+     "intf": "vsa-eth2",
+     "mac": "02:00:00:00:07:00",
+     "vlan": 20
+    }
+   ]
+  },
+  "rutas": {
+   "r": [
+    {
+     "dev": "vr-eth0.10",
+     "dst": "10.10.0.0/24",
+     "flags": [],
+     "prefsrc": "10.10.0.254",
+     "protocol": "kernel",
+     "scope": "link"
+    },
+    {
+     "dev": "vr-eth0.20",
+     "dst": "10.20.0.0/24",
+     "flags": [],
+     "prefsrc": "10.20.0.254",
+     "protocol": "kernel",
+     "scope": "link"
+    }
+   ],
+   "v1": [
+    {
+     "dev": "v1-eth0",
+     "dst": "default",
+     "flags": [],
+     "gateway": "10.10.0.254"
+    },
+    {
+     "dev": "v1-eth0",
+     "dst": "10.10.0.0/24",
+     "flags": [],
+     "prefsrc": "10.10.0.1",
+     "protocol": "kernel",
+     "scope": "link"
+    }
+   ],
+   "v2": [
+    {
+     "dev": "v2-eth0",
+     "dst": "default",
+     "flags": [],
+     "gateway": "10.10.0.254"
+    },
+    {
+     "dev": "v2-eth0",
+     "dst": "10.10.0.0/24",
+     "flags": [],
+     "prefsrc": "10.10.0.2",
+     "protocol": "kernel",
+     "scope": "link"
+    }
+   ],
+   "v3": [
+    {
+     "dev": "v3-eth0",
+     "dst": "default",
+     "flags": [],
+     "gateway": "10.20.0.254"
+    },
+    {
+     "dev": "v3-eth0",
+     "dst": "10.20.0.0/24",
+     "flags": [],
+     "prefsrc": "10.20.0.1",
+     "protocol": "kernel",
+     "scope": "link"
+    }
+   ],
+   "v4": [
+    {
+     "dev": "v4-eth0",
+     "dst": "10.10.0.0/24",
+     "flags": [],
+     "prefsrc": "10.10.0.4",
+     "protocol": "kernel",
+     "scope": "link"
+    }
+   ]
+  },
+  "ts_ns": 1795546853076495110,
+  "vecinos": {
+   "r": [
+    {
+     "dev": "vr-eth0.20",
+     "dst": "10.20.0.1",
+     "lladdr": "02:00:00:00:06:00",
+     "state": [
+      "REACHABLE"
+     ]
+    },
+    {
+     "dev": "vr-eth0.10",
+     "dst": "10.10.0.1",
+     "lladdr": "02:00:00:00:04:00",
+     "state": [
+      "DELAY"
+     ]
+    }
+   ],
+   "v1": [
+    {
+     "dev": "v1-eth0",
+     "dst": "10.10.0.2",
+     "lladdr": "02:00:00:00:05:00",
+     "state": [
+      "REACHABLE"
+     ]
+    },
+    {
+     "dev": "v1-eth0",
+     "dst": "10.10.0.254",
+     "lladdr": "02:00:00:00:03:00",
+     "state": [
+      "REACHABLE"
+     ]
+    }
+   ],
+   "v2": [
+    {
+     "dev": "v2-eth0",
+     "dst": "10.10.0.1",
+     "lladdr": "02:00:00:00:04:00",
+     "state": [
+      "DELAY"
+     ]
+    }
+   ],
+   "v3": [
+    {
+     "dev": "v3-eth0",
+     "dst": "10.20.0.254",
+     "lladdr": "02:00:00:00:03:00",
+     "state": [
+      "DELAY"
+     ]
+    }
+   ],
+   "v4": [
+    {
+     "dev": "v4-eth0",
+     "dst": "10.10.0.1",
+     "state": [
+      "FAILED"
+     ]
+    }
+   ]
+  }
+ },
+ "inicio": {
+  "direcciones": {
+   "r": [
+    "10.10.0.254/24",
+    "10.20.0.254/24"
+   ],
+   "v1": [
+    "10.10.0.1/24"
+   ],
+   "v2": [
+    "10.10.0.2/24"
+   ],
+   "v3": [
+    "10.20.0.1/24"
+   ],
+   "v4": [
+    "10.10.0.4/24"
+   ]
+  },
+  "fdb": {
+   "sa": [],
+   "sb": []
+  },
+  "rutas": {
+   "r": [
+    {
+     "dev": "vr-eth0.10",
+     "dst": "10.10.0.0/24",
+     "flags": [],
+     "prefsrc": "10.10.0.254",
+     "protocol": "kernel",
+     "scope": "link"
+    },
+    {
+     "dev": "vr-eth0.20",
+     "dst": "10.20.0.0/24",
+     "flags": [],
+     "prefsrc": "10.20.0.254",
+     "protocol": "kernel",
+     "scope": "link"
+    }
+   ],
+   "v1": [
+    {
+     "dev": "v1-eth0",
+     "dst": "default",
+     "flags": [],
+     "gateway": "10.10.0.254"
+    },
+    {
+     "dev": "v1-eth0",
+     "dst": "10.10.0.0/24",
+     "flags": [],
+     "prefsrc": "10.10.0.1",
+     "protocol": "kernel",
+     "scope": "link"
+    }
+   ],
+   "v2": [
+    {
+     "dev": "v2-eth0",
+     "dst": "default",
+     "flags": [],
+     "gateway": "10.10.0.254"
+    },
+    {
+     "dev": "v2-eth0",
+     "dst": "10.10.0.0/24",
+     "flags": [],
+     "prefsrc": "10.10.0.2",
+     "protocol": "kernel",
+     "scope": "link"
+    }
+   ],
+   "v3": [
+    {
+     "dev": "v3-eth0",
+     "dst": "default",
+     "flags": [],
+     "gateway": "10.20.0.254"
+    },
+    {
+     "dev": "v3-eth0",
+     "dst": "10.20.0.0/24",
+     "flags": [],
+     "prefsrc": "10.20.0.1",
+     "protocol": "kernel",
+     "scope": "link"
+    }
+   ],
+   "v4": [
+    {
+     "dev": "v4-eth0",
+     "dst": "10.10.0.0/24",
+     "flags": [],
+     "prefsrc": "10.10.0.4",
+     "protocol": "kernel",
+     "scope": "link"
+    }
+   ]
+  },
+  "ts_ns": 1795546849162092573,
+  "vecinos": {
+   "r": [],
+   "v1": [],
+   "v2": [],
+   "v3": [],
+   "v4": []
+  }
+ }
+}

@@ -139,6 +139,13 @@ def test_ciclo_completo_con_captura(cliente):
     assert [o['id'] for o in lista['items']] == [o['id'] for o in items[3:]]
     assert [int(o['ts_ns']) for o in items] == sorted(int(o['ts_ns']) for o in items)
 
+    # Vista OSI estilo Packet Tracer del ARP en el switch (inundación).
+    osi = cliente.get('/api/captura/observaciones/%s/osi' % arp[0]['id'], headers=AUTH)
+    assert osi.status_code == 200, osi.text
+    assert osi.json()['resultado'] == 'inundado' and len(osi.json()['salidas']) == 2
+    assert osi.json()['origen']['dispositivo'] == 'pc1'
+    assert cliente.get('/api/captura/observaciones/o999/osi', headers=AUTH).status_code == 404
+
     pcap = cliente.get('/api/captura/pcap', headers=AUTH)
     assert pcap.status_code == 200 and pcap.content[:4] == b'\x0a\x0d\x0d\x0a'
     assert pcap.content.count(b'minired o') == 9

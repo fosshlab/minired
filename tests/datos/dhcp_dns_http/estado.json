@@ -1,0 +1,307 @@
+{
+ "fin": {
+  "direcciones": {
+   "ca": [
+    "10.30.0.107/24"
+   ],
+   "ca2": [
+    "10.30.0.120/24"
+   ],
+   "cb": [
+    "10.31.0.202/24"
+   ],
+   "srva": [
+    "10.30.0.1/24"
+   ],
+   "srvb": [
+    "10.31.0.1/24"
+   ]
+  },
+  "fdb": {
+   "sa": [
+    {
+     "intf": "dsa-eth3",
+     "mac": "02:00:00:00:06:00",
+     "vlan": 0
+    },
+    {
+     "intf": "dsb-eth2",
+     "mac": "02:00:00:00:05:00",
+     "vlan": 0
+    },
+    {
+     "intf": "dsa-eth1",
+     "mac": "02:00:00:00:03:00",
+     "vlan": 0
+    }
+   ],
+   "sb": [
+    {
+     "intf": "dsb-eth2",
+     "mac": "02:00:00:00:07:00",
+     "vlan": 0
+    },
+    {
+     "intf": "dsa-eth1",
+     "mac": "02:00:00:00:04:00",
+     "vlan": 0
+    }
+   ]
+  },
+  "rutas": {
+   "ca": [
+    {
+     "dev": "dc1-eth0",
+     "dst": "default",
+     "flags": [],
+     "gateway": "10.30.0.254"
+    },
+    {
+     "dev": "dc1-eth0",
+     "dst": "10.30.0.0/24",
+     "flags": [],
+     "prefsrc": "10.30.0.107",
+     "protocol": "kernel",
+     "scope": "link"
+    }
+   ],
+   "ca2": [
+    {
+     "dev": "dc2-eth0",
+     "dst": "default",
+     "flags": [],
+     "gateway": "10.30.0.254"
+    },
+    {
+     "dev": "dc2-eth0",
+     "dst": "10.30.0.0/24",
+     "flags": [],
+     "prefsrc": "10.30.0.120",
+     "protocol": "kernel",
+     "scope": "link"
+    }
+   ],
+   "cb": [
+    {
+     "dev": "dc3-eth0",
+     "dst": "10.31.0.0/24",
+     "flags": [],
+     "prefsrc": "10.31.0.202",
+     "protocol": "kernel",
+     "scope": "link"
+    }
+   ],
+   "srva": [
+    {
+     "dev": "da1-eth0",
+     "dst": "10.30.0.0/24",
+     "flags": [],
+     "prefsrc": "10.30.0.1",
+     "protocol": "kernel",
+     "scope": "link"
+    }
+   ],
+   "srvb": [
+    {
+     "dev": "db1-eth0",
+     "dst": "10.31.0.0/24",
+     "flags": [],
+     "prefsrc": "10.31.0.1",
+     "protocol": "kernel",
+     "scope": "link"
+    }
+   ]
+  },
+  "ts_ns": 1795546888365125191,
+  "vecinos": {
+   "ca": [
+    {
+     "dev": "dc1-eth0",
+     "dst": "10.30.0.1",
+     "lladdr": "02:00:00:00:03:00",
+     "state": [
+      "REACHABLE"
+     ]
+    }
+   ],
+   "ca2": [],
+   "cb": [],
+   "srva": [
+    {
+     "dev": "da1-eth0",
+     "dst": "10.30.0.120",
+     "lladdr": "02:00:00:00:06:00",
+     "state": [
+      "DELAY"
+     ]
+    },
+    {
+     "dev": "da1-eth0",
+     "dst": "10.30.0.107",
+     "lladdr": "02:00:00:00:05:00",
+     "state": [
+      "DELAY"
+     ]
+    }
+   ],
+   "srvb": [
+    {
+     "dev": "db1-eth0",
+     "dst": "10.31.0.202",
+     "lladdr": "02:00:00:00:07:00",
+     "state": [
+      "DELAY"
+     ]
+    }
+   ]
+  }
+ },
+ "inicio": {
+  "direcciones": {
+   "ca": [
+    "10.30.0.107/24"
+   ],
+   "ca2": [
+    "10.30.0.120/24"
+   ],
+   "cb": [
+    "10.31.0.202/24"
+   ],
+   "srva": [
+    "10.30.0.1/24"
+   ],
+   "srvb": [
+    "10.31.0.1/24"
+   ]
+  },
+  "fdb": {
+   "sa": [
+    {
+     "intf": "dsb-eth2",
+     "mac": "02:00:00:00:05:00",
+     "vlan": 0
+    },
+    {
+     "intf": "dsa-eth1",
+     "mac": "02:00:00:00:03:00",
+     "vlan": 0
+    },
+    {
+     "intf": "dsa-eth3",
+     "mac": "02:00:00:00:06:00",
+     "vlan": 0
+    }
+   ],
+   "sb": [
+    {
+     "intf": "dsb-eth2",
+     "mac": "02:00:00:00:07:00",
+     "vlan": 0
+    },
+    {
+     "intf": "dsa-eth1",
+     "mac": "02:00:00:00:04:00",
+     "vlan": 0
+    }
+   ]
+  },
+  "rutas": {
+   "ca": [
+    {
+     "dev": "dc1-eth0",
+     "dst": "default",
+     "flags": [],
+     "gateway": "10.30.0.254"
+    },
+    {
+     "dev": "dc1-eth0",
+     "dst": "10.30.0.0/24",
+     "flags": [],
+     "prefsrc": "10.30.0.107",
+     "protocol": "kernel",
+     "scope": "link"
+    }
+   ],
+   "ca2": [
+    {
+     "dev": "dc2-eth0",
+     "dst": "default",
+     "flags": [],
+     "gateway": "10.30.0.254"
+    },
+    {
+     "dev": "dc2-eth0",
+     "dst": "10.30.0.0/24",
+     "flags": [],
+     "prefsrc": "10.30.0.120",
+     "protocol": "kernel",
+     "scope": "link"
+    }
+   ],
+   "cb": [
+    {
+     "dev": "dc3-eth0",
+     "dst": "10.31.0.0/24",
+     "flags": [],
+     "prefsrc": "10.31.0.202",
+     "protocol": "kernel",
+     "scope": "link"
+    }
+   ],
+   "srva": [
+    {
+     "dev": "da1-eth0",
+     "dst": "10.30.0.0/24",
+     "flags": [],
+     "prefsrc": "10.30.0.1",
+     "protocol": "kernel",
+     "scope": "link"
+    }
+   ],
+   "srvb": [
+    {
+     "dev": "db1-eth0",
+     "dst": "10.31.0.0/24",
+     "flags": [],
+     "prefsrc": "10.31.0.1",
+     "protocol": "kernel",
+     "scope": "link"
+    }
+   ]
+  },
+  "ts_ns": 1795546886438334818,
+  "vecinos": {
+   "ca": [],
+   "ca2": [],
+   "cb": [],
+   "srva": [
+    {
+     "dev": "da1-eth0",
+     "dst": "10.30.0.120",
+     "lladdr": "02:00:00:00:06:00",
+     "state": [
+      "DELAY"
+     ]
+    },
+    {
+     "dev": "da1-eth0",
+     "dst": "10.30.0.107",
+     "lladdr": "02:00:00:00:05:00",
+     "state": [
+      "DELAY"
+     ]
+    }
+   ],
+   "srvb": [
+    {
+     "dev": "db1-eth0",
+     "dst": "10.31.0.202",
+     "lladdr": "02:00:00:00:07:00",
+     "state": [
+      "DELAY"
+     ]
+    }
+   ]
+  }
+ }
+}

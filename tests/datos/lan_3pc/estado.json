@@ -1,0 +1,139 @@
+{
+ "fin": {
+  "direcciones": {
+   "pc1": [
+    "10.0.0.1/24"
+   ],
+   "pc2": [
+    "10.0.0.2/24"
+   ],
+   "pc3": [
+    "10.0.0.3/24"
+   ]
+  },
+  "fdb": {
+   "sw": [
+    {
+     "intf": "xbs-eth1",
+     "mac": "02:00:00:00:02:00",
+     "vlan": 0
+    },
+    {
+     "intf": "xbs-eth2",
+     "mac": "02:00:00:00:03:00",
+     "vlan": 0
+    }
+   ]
+  },
+  "rutas": {
+   "pc1": [
+    {
+     "dev": "xb1-eth0",
+     "dst": "10.0.0.0/24",
+     "flags": [],
+     "prefsrc": "10.0.0.1",
+     "protocol": "kernel",
+     "scope": "link"
+    }
+   ],
+   "pc2": [
+    {
+     "dev": "xb2-eth0",
+     "dst": "10.0.0.0/24",
+     "flags": [],
+     "prefsrc": "10.0.0.2",
+     "protocol": "kernel",
+     "scope": "link"
+    }
+   ],
+   "pc3": [
+    {
+     "dev": "xb3-eth0",
+     "dst": "10.0.0.0/24",
+     "flags": [],
+     "prefsrc": "10.0.0.3",
+     "protocol": "kernel",
+     "scope": "link"
+    }
+   ]
+  },
+  "ts_ns": 1795547014608819316,
+  "vecinos": {
+   "pc1": [
+    {
+     "dev": "xb1-eth0",
+     "dst": "10.0.0.2",
+     "lladdr": "02:00:00:00:03:00",
+     "state": [
+      "REACHABLE"
+     ]
+    }
+   ],
+   "pc2": [
+    {
+     "dev": "xb2-eth0",
+     "dst": "10.0.0.1",
+     "lladdr": "02:00:00:00:02:00",
+     "state": [
+      "DELAY"
+     ]
+    }
+   ],
+   "pc3": []
+  }
+ },
+ "inicio": {
+  "direcciones": {
+   "pc1": [
+    "10.0.0.1/24"
+   ],
+   "pc2": [
+    "10.0.0.2/24"
+   ],
+   "pc3": [
+    "10.0.0.3/24"
+   ]
+  },
+  "fdb": {
+   "sw": []
+  },
+  "rutas": {
+   "pc1": [
+    {
+     "dev": "xb1-eth0",
+     "dst": "10.0.0.0/24",
+     "flags": [],
+     "prefsrc": "10.0.0.1",
+     "protocol": "kernel",
+     "scope": "link"
+    }
+   ],
+   "pc2": [
+    {
+     "dev": "xb2-eth0",
+     "dst": "10.0.0.0/24",
+     "flags": [],
+     "prefsrc": "10.0.0.2",
+     "protocol": "kernel",
+     "scope": "link"
+    }
+   ],
+   "pc3": [
+    {
+     "dev": "xb3-eth0",
+     "dst": "10.0.0.0/24",
+     "flags": [],
+     "prefsrc": "10.0.0.3",
+     "protocol": "kernel",
+     "scope": "link"
+    }
+   ]
+  },
+  "ts_ns": 1795547012907071064,
+  "vecinos": {
+   "pc1": [],
+   "pc2": [],
+   "pc3": []
+  }
+ }
+}

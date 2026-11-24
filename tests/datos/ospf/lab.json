@@ -1,0 +1,161 @@
+{
+ "version": 1,
+ "nodos": [
+  {
+   "id": "f1",
+   "tipo": "pc",
+   "nombre": "f1",
+   "x": 0.0,
+   "y": 0.0,
+   "interfaces": [
+    {
+     "puerto": 0,
+     "ip": "10.61.0.1/24",
+     "vlan": null,
+     "troncal": null,
+     "subinterfaces": [],
+     "nat": null,
+     "acl_entrada": []
+    }
+   ],
+   "gateway": "10.61.0.254",
+   "dhcp": false,
+   "dns": null,
+   "servicios": null,
+   "rutas": [],
+   "frr": false,
+   "ospf": false
+  },
+  {
+   "id": "r1",
+   "tipo": "router",
+   "nombre": "fr1",
+   "x": 0.0,
+   "y": 0.0,
+   "interfaces": [
+    {
+     "puerto": 0,
+     "ip": "10.61.0.254/24",
+     "vlan": null,
+     "troncal": null,
+     "subinterfaces": [],
+     "nat": null,
+     "acl_entrada": []
+    },
+    {
+     "puerto": 1,
+     "ip": "10.60.0.1/30",
+     "vlan": null,
+     "troncal": null,
+     "subinterfaces": [],
+     "nat": null,
+     "acl_entrada": []
+    }
+   ],
+   "gateway": null,
+   "dhcp": false,
+   "dns": null,
+   "servicios": null,
+   "rutas": [],
+   "frr": true,
+   "ospf": true
+  },
+  {
+   "id": "r2",
+   "tipo": "router",
+   "nombre": "fr2",
+   "x": 0.0,
+   "y": 0.0,
+   "interfaces": [
+    {
+     "puerto": 0,
+     "ip": "10.62.0.254/24",
+     "vlan": null,
+     "troncal": null,
+     "subinterfaces": [],
+     "nat": null,
+     "acl_entrada": []
+    },
+    {
+     "puerto": 1,
+     "ip": "10.60.0.2/30",
+     "vlan": null,
+     "troncal": null,
+     "subinterfaces": [],
+     "nat": null,
+     "acl_entrada": []
+    }
+   ],
+   "gateway": null,
+   "dhcp": false,
+   "dns": null,
+   "servicios": null,
+   "rutas": [],
+   "frr": true,
+   "ospf": true
+  },
+  {
+   "id": "f2",
+   "tipo": "pc",
+   "nombre": "f2",
+   "x": 0.0,
+   "y": 0.0,
+   "interfaces": [
+    {
+     "puerto": 0,
+     "ip": "10.62.0.1/24",
+     "vlan": null,
+     "troncal": null,
+     "subinterfaces": [],
+     "nat": null,
+     "acl_entrada": []
+    }
+   ],
+   "gateway": "10.62.0.254",
+   "dhcp": false,
+   "dns": null,
+   "servicios": null,
+   "rutas": [],
+   "frr": false,
+   "ospf": false
+  }
+ ],
+ "enlaces": [
+  {
+   "id": "e1",
+   "a": {
+    "nodo": "f1",
+    "puerto": 0
+   },
+   "b": {
+    "nodo": "r1",
+    "puerto": 0
+   },
+   "desconectado": false
+  },
+  {
+   "id": "e2",
+   "a": {
+    "nodo": "r1",
+    "puerto": 1
+   },
+   "b": {
+    "nodo": "r2",
+    "puerto": 1
+   },
+   "desconectado": false
+  },
+  {
+   "id": "e3",
+   "a": {
+    "nodo": "r2",
+    "puerto": 0
+   },
+   "b": {
+    "nodo": "f2",
+    "puerto": 0
+   },
+   "desconectado": false
+  }
+ ]
+}

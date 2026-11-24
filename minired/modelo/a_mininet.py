@@ -29,6 +29,8 @@ class PlanRed:
     por_intf: dict = field(default_factory=dict)
     # id de switch -> dpid de 16 dígitos hexadecimales
     dpids: dict = field(default_factory=dict)
+    # nombre de interfaz -> MAC (deterministas, ver mac_de)
+    macs: dict = field(default_factory=dict)
 
     def extremo_opuesto(self, enlace_id, extremo):
         a, b = self.enlaces[enlace_id]
@@ -39,8 +41,14 @@ class PlanRed:
         return {eid: {'a': a.intf, 'b': b.intf} for eid, (a, b) in self.enlaces.items()}
 
 
+def mac_de(indice_nodo, puerto):
+    """MAC administrada localmente y legible: 02:00:00:00:<nodo>:<puerto> (nodo desde 1)."""
+    return '02:00:00:00:%02x:%02x' % (indice_nodo, puerto)
+
+
 def planificar(lab):
     plan = PlanRed(lab=lab)
+    indices = {n.id: i for i, n in enumerate(lab.nodos, start=1)}
     switches = [n for n in lab.nodos if n.tipo == TipoNodo.switch]
     for i, sw in enumerate(switches, start=1):
         # dpid explícito: así el nombre del switch no necesita terminar en número.
@@ -56,5 +64,6 @@ def planificar(lab):
                 ip=str(intf.ip) if intf is not None and intf.ip is not None else None)
             extremos.append(ep)
             plan.por_intf[ep.intf] = ep
+            plan.macs[ep.intf] = mac_de(indices[nodo.id], ext.puerto)
         plan.enlaces[enlace.id] = tuple(extremos)
     return plan

@@ -1,0 +1,133 @@
+{
+ "version": 1,
+ "nodos": [
+  {
+   "id": "sw",
+   "tipo": "switch",
+   "nombre": "xbs",
+   "x": 0.0,
+   "y": 0.0,
+   "interfaces": [],
+   "gateway": null,
+   "dhcp": false,
+   "dns": null,
+   "servicios": null,
+   "rutas": [],
+   "frr": false,
+   "ospf": false
+  },
+  {
+   "id": "pc1",
+   "tipo": "pc",
+   "nombre": "xb1",
+   "x": 100.0,
+   "y": 100.0,
+   "interfaces": [
+    {
+     "puerto": 0,
+     "ip": "10.0.0.1/24",
+     "vlan": null,
+     "troncal": null,
+     "subinterfaces": [],
+     "nat": null,
+     "acl_entrada": []
+    }
+   ],
+   "gateway": null,
+   "dhcp": false,
+   "dns": null,
+   "servicios": null,
+   "rutas": [],
+   "frr": false,
+   "ospf": false
+  },
+  {
+   "id": "pc2",
+   "tipo": "pc",
+   "nombre": "xb2",
+   "x": 200.0,
+   "y": 100.0,
+   "interfaces": [
+    {
+     "puerto": 0,
+     "ip": "10.0.0.2/24",
+     "vlan": null,
+     "troncal": null,
+     "subinterfaces": [],
+     "nat": null,
+     "acl_entrada": []
+    }
+   ],
+   "gateway": null,
+   "dhcp": false,
+   "dns": null,
+   "servicios": null,
+   "rutas": [],
+   "frr": false,
+   "ospf": false
+  },
+  {
+   "id": "pc3",
+   "tipo": "pc",
+   "nombre": "xb3",
+   "x": 300.0,
+   "y": 100.0,
+   "interfaces": [
+    {
+     "puerto": 0,
+     "ip": "10.0.0.3/24",
+     "vlan": null,
+     "troncal": null,
+     "subinterfaces": [],
+     "nat": null,
+     "acl_entrada": []
+    }
+   ],
+   "gateway": null,
+   "dhcp": false,
+   "dns": null,
+   "servicios": null,
+   "rutas": [],
+   "frr": false,
+   "ospf": false
+  }
+ ],
+ "enlaces": [
+  {
+   "id": "e1",
+   "a": {
+    "nodo": "pc1",
+    "puerto": 0
+   },
+   "b": {
+    "nodo": "sw",
+    "puerto": 1
+   },
+   "desconectado": false
+  },
+  {
+   "id": "e2",
+   "a": {
+    "nodo": "pc2",
+    "puerto": 0
+   },
+   "b": {
+    "nodo": "sw",
+    "puerto": 2
+   },
+   "desconectado": false
+  },
+  {
+   "id": "e3",
+   "a": {
+    "nodo": "pc3",
+    "puerto": 0
+   },
+   "b": {
+    "nodo": "sw",
+    "puerto": 3
+   },
+   "desconectado": false
+  }
+ ]
+}

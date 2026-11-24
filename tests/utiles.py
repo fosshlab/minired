@@ -93,3 +93,21 @@ class RedFalsa:
 
     def enlace(self, enlace_id, arriba):
         pass
+
+
+def escenario_grabado(nombre):
+    """(plan, observaciones correlacionadas, estado) de una captura real de tests/datos/<nombre>."""
+    import json
+    from minired.captura.correlador import Correlador
+    directorio = os.path.join(DATOS, nombre)
+    with open(os.path.join(directorio, 'lab.json')) as f:
+        lab = Lab.model_validate(json.load(f))
+    estado = {}
+    if os.path.exists(os.path.join(directorio, 'estado.json')):
+        with open(os.path.join(directorio, 'estado.json')) as f:
+            estado = json.load(f)
+    plan = planificar(lab)
+    c = Correlador({n.id: n.tipo for n in lab.nodos})
+    for o in observaciones_de(directorio, plan):
+        c.agregar(o)
+    return plan, c.confirmar_todo(), estado

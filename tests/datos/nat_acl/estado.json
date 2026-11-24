@@ -1,0 +1,260 @@
+{
+ "fin": {
+  "direcciones": {
+   "n1": [
+    "10.40.0.1/24"
+   ],
+   "n2": [
+    "10.40.0.2/24"
+   ],
+   "r": [
+    "10.40.0.254/24",
+    "203.0.113.1/24"
+   ],
+   "web": [
+    "203.0.113.10/24"
+   ]
+  },
+  "fdb": {
+   "sw": [
+    {
+     "intf": "ns-eth1",
+     "mac": "02:00:00:00:01:00",
+     "vlan": 0
+    },
+    {
+     "intf": "ns-eth3",
+     "mac": "02:00:00:00:04:00",
+     "vlan": 0
+    },
+    {
+     "intf": "ns-eth2",
+     "mac": "02:00:00:00:02:00",
+     "vlan": 0
+    }
+   ]
+  },
+  "rutas": {
+   "n1": [
+    {
+     "dev": "n1-eth0",
+     "dst": "default",
+     "flags": [],
+     "gateway": "10.40.0.254"
+    },
+    {
+     "dev": "n1-eth0",
+     "dst": "10.40.0.0/24",
+     "flags": [],
+     "prefsrc": "10.40.0.1",
+     "protocol": "kernel",
+     "scope": "link"
+    }
+   ],
+   "n2": [
+    {
+     "dev": "n2-eth0",
+     "dst": "default",
+     "flags": [],
+     "gateway": "10.40.0.254"
+    },
+    {
+     "dev": "n2-eth0",
+     "dst": "10.40.0.0/24",
+     "flags": [],
+     "prefsrc": "10.40.0.2",
+     "protocol": "kernel",
+     "scope": "link"
+    }
+   ],
+   "r": [
+    {
+     "dev": "nr-eth0",
+     "dst": "10.40.0.0/24",
+     "flags": [],
+     "prefsrc": "10.40.0.254",
+     "protocol": "kernel",
+     "scope": "link"
+    },
+    {
+     "dev": "nr-eth1",
+     "dst": "198.51.100.0/24",
+     "flags": [],
+     "gateway": "203.0.113.10"
+    },
+    {
+     "dev": "nr-eth1",
+     "dst": "203.0.113.0/24",
+     "flags": [],
+     "prefsrc": "203.0.113.1",
+     "protocol": "kernel",
+     "scope": "link"
+    }
+   ],
+   "web": [
+    {
+     "dev": "nsrv-eth0",
+     "dst": "203.0.113.0/24",
+     "flags": [],
+     "prefsrc": "203.0.113.10",
+     "protocol": "kernel",
+     "scope": "link"
+    }
+   ]
+  },
+  "ts_ns": 1795546857276717825,
+  "vecinos": {
+   "n1": [
+    {
+     "dev": "n1-eth0",
+     "dst": "10.40.0.254",
+     "lladdr": "02:00:00:00:04:00",
+     "state": [
+      "REACHABLE"
+     ]
+    }
+   ],
+   "n2": [
+    {
+     "dev": "n2-eth0",
+     "dst": "10.40.0.254",
+     "lladdr": "02:00:00:00:04:00",
+     "state": [
+      "REACHABLE"
+     ]
+    }
+   ],
+   "r": [
+    {
+     "dev": "nr-eth0",
+     "dst": "10.40.0.1",
+     "lladdr": "02:00:00:00:01:00",
+     "state": [
+      "DELAY"
+     ]
+    },
+    {
+     "dev": "nr-eth1",
+     "dst": "203.0.113.10",
+     "lladdr": "02:00:00:00:05:00",
+     "state": [
+      "REACHABLE"
+     ]
+    },
+    {
+     "dev": "nr-eth0",
+     "dst": "10.40.0.2",
+     "lladdr": "02:00:00:00:02:00",
+     "state": [
+      "STALE"
+     ]
+    }
+   ],
+   "web": [
+    {
+     "dev": "nsrv-eth0",
+     "dst": "203.0.113.1",
+     "lladdr": "02:00:00:00:04:01",
+     "state": [
+      "DELAY"
+     ]
+    }
+   ]
+  }
+ },
+ "inicio": {
+  "direcciones": {
+   "n1": [
+    "10.40.0.1/24"
+   ],
+   "n2": [
+    "10.40.0.2/24"
+   ],
+   "r": [
+    "10.40.0.254/24",
+    "203.0.113.1/24"
+   ],
+   "web": [
+    "203.0.113.10/24"
+   ]
+  },
+  "fdb": {
+   "sw": []
+  },
+  "rutas": {
+   "n1": [
+    {
+     "dev": "n1-eth0",
+     "dst": "default",
+     "flags": [],
+     "gateway": "10.40.0.254"
+    },
+    {
+     "dev": "n1-eth0",
+     "dst": "10.40.0.0/24",
+     "flags": [],
+     "prefsrc": "10.40.0.1",
+     "protocol": "kernel",
+     "scope": "link"
+    }
+   ],
+   "n2": [
+    {
+     "dev": "n2-eth0",
+     "dst": "default",
+     "flags": [],
+     "gateway": "10.40.0.254"
+    },
+    {
+     "dev": "n2-eth0",
+     "dst": "10.40.0.0/24",
+     "flags": [],
+     "prefsrc": "10.40.0.2",
+     "protocol": "kernel",
+     "scope": "link"
+    }
+   ],
+   "r": [
+    {
+     "dev": "nr-eth0",
+     "dst": "10.40.0.0/24",
+     "flags": [],
+     "prefsrc": "10.40.0.254",
+     "protocol": "kernel",
+     "scope": "link"
+    },
+    {
+     "dev": "nr-eth1",
+     "dst": "198.51.100.0/24",
+     "flags": [],
+     "gateway": "203.0.113.10"
+    },
+    {
+     "dev": "nr-eth1",
+     "dst": "203.0.113.0/24",
+     "flags": [],
+     "prefsrc": "203.0.113.1",
+     "protocol": "kernel",
+     "scope": "link"
+    }
+   ],
+   "web": [
+    {
+     "dev": "nsrv-eth0",
+     "dst": "203.0.113.0/24",
+     "flags": [],
+     "prefsrc": "203.0.113.10",
+     "protocol": "kernel",
+     "scope": "link"
+    }
+   ]
+  },
+  "ts_ns": 1795546853490416829,
+  "vecinos": {
+   "n1": [],
+   "n2": [],
+   "r": [],
+   "web": []
+  }
+ }
+}

@@ -21,13 +21,18 @@ class SesionCaptura:
     MAX_OBSERVACIONES = 5000
     INTERVALO_S = 0.1
 
-    def __init__(self, plan, popen, publicar, directorio_base=None, reloj=time.time_ns, en_espera=()):
+    def __init__(self, plan, popen, publicar, directorio_base=None, reloj=time.time_ns, en_espera=(),
+                 instantanea=None):
         """popen(nodo_id, argv, **kw): proceso en el namespace del nodo.
         publicar(dict): envía un evento a la interfaz (debe ser seguro entre hilos).
         en_espera: enlaces caídos al empezar; tcpdump no abre una interfaz caída
         ("That device is not up"), así que sus extremos arrancan en activar_enlace().
         """
         self.en_espera = set(en_espera)
+        # Estado de la red (rutas, ARP, tabla MAC) al iniciar y al detener: la vista OSI lo usa
+        # para explicar decisiones. No es el instante exacto de cada paquete, y se dice.
+        self._instantanea = instantanea
+        self.estado_red = {}
         self.plan = plan
         self._popen = popen
         self._publicar = publicar
@@ -53,6 +58,7 @@ class SesionCaptura:
 
     def iniciar(self, timeout=5.0):
         self.t0_ns = self._reloj()
+        self._tomar_estado('inicio')
         try:
             activos = [c for c in self.capturadores if c.extremo.enlace not in self.en_espera]
             self._arrancar(activos, timeout)
@@ -92,12 +98,21 @@ class SesionCaptura:
         self._ticker.join()
         with self._lock:
             self._guardar(self.correlador.confirmar_todo())
+        self._tomar_estado('fin')
         self.activa = False
         self._publicar({'tipo': 'captura', **self.estado()})
 
     def descartar(self):
         self.detener()
         shutil.rmtree(self.directorio, ignore_errors=True)
+
+    def _tomar_estado(self, momento):
+        if self._instantanea is None:
+            return
+        try:
+            self.estado_red[momento] = self._instantanea()
+        except Exception as exc:          # sin estado se explica menos, pero la captura sigue
+            self.estado_red[momento] = {'error': str(exc)}
 
     # --- datos en vivo -----------------------------------------------------
 
@@ -152,6 +167,17 @@ class SesionCaptura:
             self._capas[obs_id] = disector.disecar(obs.ts_ns, obs.largo, obs.datos)
         return {'id': obs.id, 'intf': obs.intf, 'pcap': {'archivo': obs.pcap_archivo, 'n': obs.pcap_n},
                 'hex': obs.datos.hex(), 'capas': self._capas[obs_id]}
+
+    def osi(self, obs_id):
+        """Vista OSI (capas de entrada y salida y decisiones) de una observación confirmada."""
+        from .interpretar import Interprete
+        with self._lock:
+            if obs_id not in self.por_id:
+                return None
+            observaciones = list(self.observaciones)
+        visita = Interprete(self.plan, observaciones, self.estado_red).visita(obs_id)
+        visita['estado_red'] = sorted(k for k, v in self.estado_red.items() if 'error' not in v)
+        return visita
 
     def escribir_pcapng(self, f):
         """Une los PCAP de todos los extremos en un PCAPng ordenado por tiempo.

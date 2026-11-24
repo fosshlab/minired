@@ -1,0 +1,338 @@
+{
+ "fin": {
+  "direcciones": {
+   "f1": [
+    "10.61.0.1/24"
+   ],
+   "f2": [
+    "10.62.0.1/24"
+   ],
+   "r1": [
+    "10.61.0.254/24",
+    "10.60.0.1/30"
+   ],
+   "r2": [
+    "10.60.0.2/30",
+    "10.62.0.254/24"
+   ]
+  },
+  "fdb": {},
+  "rutas": {
+   "f1": [
+    {
+     "dev": "f1-eth0",
+     "dst": "default",
+     "flags": [],
+     "gateway": "10.61.0.254"
+    },
+    {
+     "dev": "f1-eth0",
+     "dst": "10.61.0.0/24",
+     "flags": [],
+     "prefsrc": "10.61.0.1",
+     "protocol": "kernel",
+     "scope": "link"
+    }
+   ],
+   "f2": [
+    {
+     "dev": "f2-eth0",
+     "dst": "default",
+     "flags": [],
+     "gateway": "10.62.0.254"
+    },
+    {
+     "dev": "f2-eth0",
+     "dst": "10.62.0.0/24",
+     "flags": [],
+     "prefsrc": "10.62.0.1",
+     "protocol": "kernel",
+     "scope": "link"
+    }
+   ],
+   "r1": [
+    {
+     "dev": "fr1-eth1",
+     "dst": "10.60.0.0/30",
+     "flags": [],
+     "prefsrc": "10.60.0.1",
+     "protocol": "kernel",
+     "scope": "link"
+    },
+    {
+     "dev": "fr1-eth0",
+     "dst": "10.61.0.0/24",
+     "flags": [],
+     "prefsrc": "10.61.0.254",
+     "protocol": "kernel",
+     "scope": "link"
+    },
+    {
+     "dev": "fr1-eth1",
+     "dst": "10.62.0.0/24",
+     "flags": [],
+     "gateway": "10.60.0.2",
+     "metric": 20,
+     "nhid": 10,
+     "protocol": "ospf"
+    }
+   ],
+   "r2": [
+    {
+     "dev": "fr2-eth1",
+     "dst": "10.60.0.0/30",
+     "flags": [],
+     "prefsrc": "10.60.0.2",
+     "protocol": "kernel",
+     "scope": "link"
+    },
+    {
+     "dev": "fr2-eth1",
+     "dst": "10.61.0.0/24",
+     "flags": [],
+     "gateway": "10.60.0.1",
+     "metric": 20,
+     "nhid": 10,
+     "protocol": "ospf"
+    },
+    {
+     "dev": "fr2-eth0",
+     "dst": "10.62.0.0/24",
+     "flags": [],
+     "prefsrc": "10.62.0.254",
+     "protocol": "kernel",
+     "scope": "link"
+    }
+   ]
+  },
+  "ts_ns": 1795546885431524668,
+  "vecinos": {
+   "f1": [
+    {
+     "dev": "f1-eth0",
+     "dst": "10.61.0.254",
+     "lladdr": "02:00:00:00:02:00",
+     "state": [
+      "REACHABLE"
+     ]
+    }
+   ],
+   "f2": [
+    {
+     "dev": "f2-eth0",
+     "dst": "10.62.0.254",
+     "lladdr": "02:00:00:00:03:00",
+     "state": [
+      "REACHABLE"
+     ]
+    }
+   ],
+   "r1": [
+    {
+     "dev": "fr1-eth1",
+     "dst": "10.60.0.2",
+     "lladdr": "02:00:00:00:03:01",
+     "protocol": "zebra",
+     "state": [
+      "REACHABLE"
+     ]
+    },
+    {
+     "dev": "fr1-eth0",
+     "dst": "10.61.0.1",
+     "lladdr": "02:00:00:00:01:00",
+     "state": [
+      "REACHABLE"
+     ]
+    }
+   ],
+   "r2": [
+    {
+     "dev": "fr2-eth1",
+     "dst": "10.60.0.1",
+     "lladdr": "02:00:00:00:02:01",
+     "protocol": "zebra",
+     "state": [
+      "REACHABLE"
+     ]
+    },
+    {
+     "dev": "fr2-eth0",
+     "dst": "10.62.0.1",
+     "lladdr": "02:00:00:00:04:00",
+     "state": [
+      "REACHABLE"
+     ]
+    }
+   ]
+  }
+ },
+ "inicio": {
+  "direcciones": {
+   "f1": [
+    "10.61.0.1/24"
+   ],
+   "f2": [
+    "10.62.0.1/24"
+   ],
+   "r1": [
+    "10.61.0.254/24",
+    "10.60.0.1/30"
+   ],
+   "r2": [
+    "10.60.0.2/30",
+    "10.62.0.254/24"
+   ]
+  },
+  "fdb": {},
+  "rutas": {
+   "f1": [
+    {
+     "dev": "f1-eth0",
+     "dst": "default",
+     "flags": [],
+     "gateway": "10.61.0.254"
+    },
+    {
+     "dev": "f1-eth0",
+     "dst": "10.61.0.0/24",
+     "flags": [],
+     "prefsrc": "10.61.0.1",
+     "protocol": "kernel",
+     "scope": "link"
+    }
+   ],
+   "f2": [
+    {
+     "dev": "f2-eth0",
+     "dst": "default",
+     "flags": [],
+     "gateway": "10.62.0.254"
+    },
+    {
+     "dev": "f2-eth0",
+     "dst": "10.62.0.0/24",
+     "flags": [],
+     "prefsrc": "10.62.0.1",
+     "protocol": "kernel",
+     "scope": "link"
+    }
+   ],
+   "r1": [
+    {
+     "dev": "fr1-eth1",
+     "dst": "10.60.0.0/30",
+     "flags": [],
+     "prefsrc": "10.60.0.1",
+     "protocol": "kernel",
+     "scope": "link"
+    },
+    {
+     "dev": "fr1-eth0",
+     "dst": "10.61.0.0/24",
+     "flags": [],
+     "prefsrc": "10.61.0.254",
+     "protocol": "kernel",
+     "scope": "link"
+    },
+    {
+     "dev": "fr1-eth1",
+     "dst": "10.62.0.0/24",
+     "flags": [],
+     "gateway": "10.60.0.2",
+     "metric": 20,
+     "nhid": 10,
+     "protocol": "ospf"
+    }
+   ],
+   "r2": [
+    {
+     "dev": "fr2-eth1",
+     "dst": "10.60.0.0/30",
+     "flags": [],
+     "prefsrc": "10.60.0.2",
+     "protocol": "kernel",
+     "scope": "link"
+    },
+    {
+     "dev": "fr2-eth1",
+     "dst": "10.61.0.0/24",
+     "flags": [],
+     "gateway": "10.60.0.1",
+     "metric": 20,
+     "nhid": 10,
+     "protocol": "ospf"
+    },
+    {
+     "dev": "fr2-eth0",
+     "dst": "10.62.0.0/24",
+     "flags": [],
+     "prefsrc": "10.62.0.254",
+     "protocol": "kernel",
+     "scope": "link"
+    }
+   ]
+  },
+  "ts_ns": 1795546874173621195,
+  "vecinos": {
+   "f1": [
+    {
+     "dev": "f1-eth0",
+     "dst": "10.61.0.254",
+     "lladdr": "02:00:00:00:02:00",
+     "state": [
+      "REACHABLE"
+     ]
+    }
+   ],
+   "f2": [
+    {
+     "dev": "f2-eth0",
+     "dst": "10.62.0.254",
+     "lladdr": "02:00:00:00:03:00",
+     "state": [
+      "DELAY"
+     ]
+    }
+   ],
+   "r1": [
+    {
+     "dev": "fr1-eth1",
+     "dst": "10.60.0.2",
+     "lladdr": "02:00:00:00:03:01",
+     "protocol": "zebra",
+     "state": [
+      "DELAY"
+     ]
+    },
+    {
+     "dev": "fr1-eth0",
+     "dst": "10.61.0.1",
+     "lladdr": "02:00:00:00:01:00",
+     "state": [
+      "REACHABLE"
+     ]
+    }
+   ],
+   "r2": [
+    {
+     "dev": "fr2-eth1",
+     "dst": "10.60.0.1",
+     "lladdr": "02:00:00:00:02:01",
+     "protocol": "zebra",
+     "state": [
+      "REACHABLE"
+     ]
+    },
+    {
+     "dev": "fr2-eth0",
+     "dst": "10.62.0.1",
+     "lladdr": "02:00:00:00:04:00",
+     "state": [
+      "REACHABLE"
+     ]
+    }
+   ]
+  }
+ }
+}

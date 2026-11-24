@@ -220,6 +220,14 @@ def crear_app(controlador, config):
             raise HTTPException(404, 'observación inexistente')
         return datos
 
+    @app.get('/api/captura/observaciones/{obs_id}/osi')
+    async def osi(obs_id: str = Path(pattern=r'^o[0-9]{1,9}$')):
+        sesion = _sesion()
+        datos = await asyncio.to_thread(sesion.osi, obs_id)
+        if datos is None:
+            raise HTTPException(404, 'observación inexistente')
+        return datos
+
     @app.get('/api/captura/pcap')
     async def pcap():
         sesion = _sesion()

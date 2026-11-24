@@ -21,11 +21,6 @@ class ErrorRed(Exception):
     pass
 
 
-def _mac(indice_nodo, puerto):
-    # Administrada localmente y legible: 02:00:00:00:<nodo>:<puerto>
-    return '02:00:00:00:%02x:%02x' % (indice_nodo, puerto)
-
-
 def _clase_router():
     """Router Linux: un Node en su namespace con reenvío IPv4 (no depende de nodelib.LinuxRouter,
     que no está en todas las versiones instaladas del fork)."""
@@ -63,10 +58,8 @@ class RedMininet:
         net = Mininet(topo=None, switch=OVSBridge, controller=None, build=False,
                       autoSetMacs=False, autoStaticArp=False, waitConnected=False)
         self.net = net
-        indices = {}
         try:
-            for i, nodo in enumerate(lab.nodos, start=1):
-                indices[nodo.id] = i
+            for nodo in lab.nodos:
                 if nodo.tipo in HOSTS:
                     n = net.addHost(nodo.nombre, ip=None)
                 elif nodo.tipo == TipoNodo.router:
@@ -79,8 +72,7 @@ class RedMininet:
                 net.addLink(self._nodos[a.nodo], self._nodos[b.nodo],
                             port1=enlace.a.puerto, port2=enlace.b.puerto,
                             intfName1=a.intf, intfName2=b.intf,
-                            addr1=_mac(indices[a.nodo], enlace.a.puerto),
-                            addr2=_mac(indices[b.nodo], enlace.b.puerto))
+                            addr1=self.plan.macs[a.intf], addr2=self.plan.macs[b.intf])
             net.build()
             net.start()
             for nodo_id, n in self._nodos.items():
@@ -388,6 +380,48 @@ class RedMininet:
             if self.directorio and os.path.exists(ruta):
                 secciones.append({'titulo': titulo, 'comando': None, 'salida': _cola(ruta, 4000)})
         return {'nodo': nodo_id, 'secciones': secciones}
+
+    def instantanea(self):
+        """Estado de la red en este momento, para explicar decisiones en la vista OSI:
+        rutas, direcciones y vecinos ARP de cada nodo con namespace, y tabla MAC de cada switch."""
+        import json
+        r = {'ts_ns': time.time_ns(), 'rutas': {}, 'direcciones': {}, 'vecinos': {}, 'fdb': {}}
+        for nodo in self.plan.lab.nodos:
+            n = self._nodos.get(nodo.id)
+            if n is None:
+                continue
+            if nodo.tipo == TipoNodo.switch:
+                r['fdb'][nodo.id] = self._fdb(nodo, n)
+                continue
+            for clave, argv in (('rutas', ['ip', '-j', '-4', 'route']), ('direcciones', ['ip', '-j', '-4', 'addr']),
+                                ('vecinos', ['ip', '-j', '-4', 'neigh'])):
+                try:
+                    datos = json.loads(self._ejecutar(n, argv) or '[]')
+                except (ErrorRed, ValueError, subprocess.TimeoutExpired):
+                    datos = []
+                if clave == 'direcciones':
+                    datos = ['%s/%s' % (a['local'], a['prefixlen']) for i in datos for a in i.get('addr_info', [])
+                             if a.get('family') == 'inet' and not a['local'].startswith('127.')]
+                r[clave][nodo.id] = datos
+        return r
+
+    def _fdb(self, nodo, n):
+        """Tabla MAC de OVS como [{intf, vlan, mac}] (el puerto OpenFlow se traduce a su nombre)."""
+        import json
+        try:
+            tabla = json.loads(self._ejecutar(n, ['ovs-vsctl', '--format=json', '--columns=name,ofport',
+                                                  'list', 'Interface']))
+            ofport = {str(fila[1]): fila[0] for fila in tabla['data']}
+            salida = self._ejecutar(n, ['ovs-appctl', 'fdb/show', nodo.nombre])
+        except (ErrorRed, ValueError, KeyError, subprocess.TimeoutExpired):
+            return []
+        filas = []
+        for linea in salida.splitlines()[1:]:
+            partes = linea.split()
+            if len(partes) >= 3:
+                filas.append({'intf': ofport.get(partes[0], partes[0]), 'vlan': int(partes[1]),
+                              'mac': partes[2]})
+        return filas
 
     def _puertos_conectados(self, nodo):
         r = []
