@@ -72,7 +72,10 @@ class PedidoEnlace(BaseModel):
     arriba: bool
 
 
-ID = Path(pattern=ID_RE)
+def ID():
+    # Un Path nuevo por parámetro: FastAPI fija el alias en el objeto, y uno compartido hacía que
+    # /api/enlaces/{enlace_id}/estado pidiera "nodo_id" y respondiera siempre 422.
+    return Path(pattern=ID_RE)
 
 
 def crear_app(controlador, config):
@@ -154,25 +157,25 @@ def crear_app(controlador, config):
         return controlador.estado_dict()
 
     @app.post('/api/nodos/{nodo_id}/ping')
-    async def ping(pedido: PedidoPing, nodo_id: str = ID):
+    async def ping(pedido: PedidoPing, nodo_id: str = ID()):
         if controlador.lab.nodo(nodo_id) is None:
             raise HTTPException(404, 'nodo inexistente')
         return await controlador.ping(nodo_id, pedido.destino, pedido.cantidad)
 
     @app.post('/api/nodos/{nodo_id}/dhcp')
-    async def dhcp(nodo_id: str = ID):
+    async def dhcp(nodo_id: str = ID()):
         if controlador.lab.nodo(nodo_id) is None:
             raise HTTPException(404, 'nodo inexistente')
         return await controlador.dhcp(nodo_id)
 
     @app.get('/api/nodos/{nodo_id}/diagnostico')
-    async def diagnostico(nodo_id: str = ID):
+    async def diagnostico(nodo_id: str = ID()):
         if controlador.lab.nodo(nodo_id) is None:
             raise HTTPException(404, 'nodo inexistente')
         return await controlador.diagnostico(nodo_id)
 
     @app.post('/api/enlaces/{enlace_id}/estado')
-    async def estado_enlace(pedido: PedidoEnlace, enlace_id: str = ID):
+    async def estado_enlace(pedido: PedidoEnlace, enlace_id: str = ID()):
         try:
             await controlador.enlace(enlace_id, pedido.arriba)
         except KeyError:

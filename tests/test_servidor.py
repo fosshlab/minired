@@ -178,3 +178,19 @@ def test_ws_eventos_libera_al_desconectar(cliente):
     while ctl.bus.colas and time.monotonic() < limite:
         time.sleep(0.05)
     assert ctl.bus.colas == set()
+
+
+def test_bajar_y_subir_enlace(cliente):
+    """Regresión: un Path compartido hacía que esta ruta respondiera siempre 422."""
+    assert cliente.put('/api/lab', json=lab_json(), headers=AUTH).status_code == 200
+    r = cliente.post('/api/enlaces/e1/estado', json={'arriba': False}, headers=AUTH)
+    assert r.status_code == 409                                    # red detenida
+    assert cliente.post('/api/red/iniciar', headers=AUTH).status_code == 200
+    r = cliente.post('/api/enlaces/e1/estado', json={'arriba': False}, headers=AUTH)
+    assert r.status_code == 200, r.text
+    assert cliente.get('/api/estado', headers=AUTH).json()['enlaces_caidos'] == ['e1']
+    assert cliente.post('/api/enlaces/e9/estado', json={'arriba': False}, headers=AUTH).status_code == 404
+    assert cliente.post('/api/enlaces/e1/estado', json={'arriba': True}, headers=AUTH).status_code == 200
+    assert cliente.get('/api/estado', headers=AUTH).json()['enlaces_caidos'] == []
+    cliente.post('/api/enlaces/e2/estado', json={'arriba': False}, headers=AUTH)
+    assert cliente.post('/api/red/detener', headers=AUTH).json()['enlaces_caidos'] == []
