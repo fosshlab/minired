@@ -62,6 +62,10 @@ def red(tmp_path):
     """Levanta un laboratorio; al salir verifica limpieza y que el sistema quedó igual."""
     estado = {}
     antes = _huella_sistema()
+    # Otra red de minired puede estar en marcha en la VM (la de otra persona): se compara contra
+    # lo que había antes de esta prueba, no contra "nada".
+    dirs_antes = set(glob.glob('/tmp/minired-red-*'))
+    procesos_antes = set(_procesos_del_lab())
     ctl = Controlador(RedMininet, directorio_capturas=str(tmp_path))
     app = crear_app(ctl, Config(puerto=8787, token=TOKEN))
 
@@ -84,8 +88,8 @@ def red(tmp_path):
     while _interfaces(estado.get('prefijos', ('-',))) and time.monotonic() < deadline:
         time.sleep(0.1)
     assert _interfaces(estado.get('prefijos', ('-',))) == []
-    assert _procesos_del_lab() == []
-    assert glob.glob('/tmp/minired-red-*') == []
+    assert set(_procesos_del_lab()) <= procesos_antes
+    assert set(glob.glob('/tmp/minired-red-*')) <= dirs_antes
     assert _huella_sistema() == antes
 
 
@@ -132,6 +136,9 @@ def test_vlan_troncal_e_intervlan(red):
     for origen, destino in (('v1', '10.10.0.2'), ('v1', '10.20.0.1')):
         assert esperar(lambda: ping(red, origen, destino)['codigo'] == 0, 6), (origen, destino)
     assert ping(red, 'v4', '10.10.0.1')['codigo'] != 0          # VLAN 20 no ve a la 10
+    # Ese ping fallido deja la entrada ARP de v4 en INCOMPLETE/FAILED: si el ping capturado llega en
+    # ese momento, Linux no vuelve a preguntar. Se vacía para que el ARP de v4 se vea siempre.
+    sh(red, 'v4', 'ip', 'neigh', 'flush', 'dev', 'v4-eth0')
 
     def trafico():
         return [ping(red, 'v1', '10.10.0.2'), ping(red, 'v1', '10.20.0.1'), ping(red, 'v4', '10.10.0.1')]
