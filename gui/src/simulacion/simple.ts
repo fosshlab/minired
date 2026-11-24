@@ -70,8 +70,11 @@ export function etiquetaSimple(o: Observacion, nombres: Nombres): string {
   if (r.http) return `HTTP ${r.http.linea.split(' ').slice(0, 2).join(' ')}`;
   if (r.ospf) return `OSPF ${['', 'Hello', 'Descripción de BD', 'Pedido de LS', 'Actualización de LS', 'Acuse de LS'][r.ospf.tipo] ?? ''} de ${n(r.ip!.src)}`.trim();
   if (r.icmp && r.ip) {
+    // Después de un NAT la dirección cambió de verdad: se muestra la real y se avisa.
+    const nat = o.confianza === 'baja' ? ' (traducido por NAT)' : '';
     const de = n(r.ip.src);
     const a = n(r.ip.dst);
+    if (nat) return `${r.icmp.tipo === 8 ? 'Eco ICMP' : r.icmp.tipo === 0 ? 'Respuesta de eco' : 'ICMP'} ${de} → ${a}${nat}`;
     if (r.icmp.tipo === 8) return `Eco ICMP ${de} → ${a}`;
     if (r.icmp.tipo === 0) return `Respuesta de eco ${de} → ${a}`;
     if (r.icmp.tipo === 3) return `ICMP: destino inalcanzable (avisa ${de})`;

@@ -159,6 +159,16 @@ def test_vlan_troncal_e_intervlan(red):
     assert arp_v4 and not any(o['nodo'] in ('v1', 'v2') for o in arp_v4)
     assert {o['resumen'].get('vlan', {}).get('id') for o in arp_v4 if o['enlace'] in ('e3', 'e4')} == {20}
 
+    # Vista OSI del switch: la trama entra por acceso VLAN 10 y sale por la troncal con etiqueta.
+    en_sa = next(o for o in items if o['paquete'] == por_destino['10.20.0.1'] and o['nodo'] == 'sa')
+    osi = red.get('/api/captura/observaciones/%s/osi' % en_sa['id'], headers=AUTH).json()
+    textos = [d['texto'] for d in osi['decisiones']]
+    assert osi['resultado'] == 'reenviado' and osi['tipo'] == 'switch'
+    assert any('puerto de acceso de la VLAN 10' in t for t in textos)
+    assert any('troncal: agrega la etiqueta 802.1Q de la VLAN 10' in t for t in textos)
+    assert any('la tabla MAC de vsa lo confirma' in t for t in textos)            # leída al detener
+    assert osi['origen']['nombre'] == 'v1'
+
     diag = red.get('/api/nodos/sa/diagnostico', headers=AUTH).json()
     texto = '\n'.join(s['salida'] for s in diag['secciones'])
     assert re.search(r'name\s*: "?vsa-eth3"?\s*\ntag\s*: \[\]\s*\ntrunks\s*: \[10, 20\]', texto), texto
@@ -271,3 +281,16 @@ def test_nat_y_acl(red):
         ('e4', 'alta', '203.0.113.1'), ('e3', 'baja', '10.40.0.1'), ('e1', 'alta', '10.40.0.1')]
     diag = red.get('/api/nodos/r/diagnostico', headers=AUTH).json()
     assert any('masquerade' in s['salida'] for s in diag['secciones'])
+
+    # Vista OSI (modo simple) sobre la red real: NAT observado y ACL que descarta a n2.
+    en_router = next(o for o in items if o['nodo'] == 'r' and o['paquete'] == ida['paquete'])
+    osi = red.get('/api/captura/observaciones/%s/osi' % en_router['id'], headers=AUTH).json()
+    assert osi['resultado'] == 'traducido' and osi['estado_red'] == ['fin', 'inicio']
+    assert any(d['fuente'] == 'observado' and 'NAT (PAT) traduce la IP de origen 10.40.0.1 → 203.0.113.1' in d['texto']
+               for d in osi['decisiones'])
+    assert any(d['fuente'] == 'estado' and 'Busca 203.0.113.10 en la tabla de rutas' in d['texto'] for d in osi['decisiones'])
+    _, items = capturar(red, lambda: ping(red, 'n2', '203.0.113.10'))
+    bloqueado = next(o for o in items if o['nodo'] == 'r' and o['resumen'].get('icmp', {}).get('tipo') == 8)
+    osi = red.get('/api/captura/observaciones/%s/osi' % bloqueado['id'], headers=AUTH).json()
+    assert osi['resultado'] == 'descartado' and osi['salidas'] == []
+    assert any('regla 1 (denegar icmp desde 10.40.0.2/32)' in d['texto'] for d in osi['decisiones'])

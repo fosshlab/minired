@@ -60,21 +60,21 @@ def capas(resumen, intf, describir_mac):
         r.append((4, 'TCP', 'puerto %d → %d, banderas [%s]' % (t['sport'], t['dport'], t['banderas'])))
     if 'ip' in resumen:
         ip = resumen['ip']
-        texto = 'IPv4 %s → %s, TTL %d' % (ip['src'], ip['dst'], ip['ttl'])
+        texto = '%s → %s, TTL %d' % (ip['src'], ip['dst'], ip['ttl'])
         if 'icmp' in resumen:
             texto += '; ICMP %s' % ICMP_TIPOS.get(resumen['icmp']['tipo'], 'tipo %d' % resumen['icmp']['tipo'])
         elif 'ospf' in resumen:
             texto += '; OSPF'
-        r.append((3, 'IPv4' + (' + ICMP' if 'icmp' in resumen else ''), texto))
+        r.append((3, 'IPv4', texto))
     if 'arp' in resumen:
         a = resumen['arp']
         r.append((2, 'ARP', ('solicitud: ¿quién tiene %s? avisar a %s' % (a['tpa'], a['spa'])) if a['op'] == 1
                   else 'respuesta: %s está en %s' % (a['spa'], a['sha'])))
     if eth:
-        texto = 'Ethernet II: %s → %s' % (describir_mac(eth['src']), describir_mac(eth['dst']))
+        texto = '%s → %s' % (describir_mac(eth['src']), describir_mac(eth['dst']))
         if 'vlan' in resumen:
             texto += ', etiqueta 802.1Q VLAN %d' % resumen['vlan']['id']
-        r.append((2, 'Ethernet', texto))
+        r.append((2, 'Ethernet II', texto))
     r.append((1, 'Puerto', intf))
     return [{'capa': n, 'nombre': nombre, 'texto': texto} for n, nombre, texto in r]
 

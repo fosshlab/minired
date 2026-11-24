@@ -48,6 +48,8 @@ export function Lienzo() {
       if (c.type === 'select') sel.push(c);
     }
     if (sel.length) {
+      // Elegir un equipo muestra sus datos, no el detalle del último paquete elegido.
+      if (sel.some((c) => c.selected)) useSimulacion.getState().elegir(null);
       const { marcados: m, enlaces: todos } = useLab.getState();
       const quitados = sel.filter((c) => !c.selected).map((c) => c.id);
       marcar(soltarEnlacesDe(aplicarCambios(m, 'nodos', sel), quitados, todos));
@@ -56,7 +58,10 @@ export function Lienzo() {
 
   const alCambiarAristas = useCallback((cambios: EdgeChange<AristaFlujo>[]) => {
     const sel = cambios.filter((c): c is CambioSeleccion & EdgeChange<AristaFlujo> => c.type === 'select');
-    if (sel.length) marcar(aplicarCambios(useLab.getState().marcados, 'enlaces', sel));
+    if (sel.length) {
+      if (sel.some((c) => c.selected)) useSimulacion.getState().elegir(null);
+      marcar(aplicarCambios(useLab.getState().marcados, 'enlaces', sel));
+    }
   }, [marcar]);
 
   const alConectar = useCallback((c: Connection) => {

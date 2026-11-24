@@ -44,6 +44,7 @@ describe('modo simple', () => {
     expect(etiquetaSimple(arpRespuesta, nombres)).toBe('ARP: 10.0.0.2 está en pc2');
     expect(etiquetaSimple(eco, nombres)).toBe('Eco ICMP pc1 → pc2');
     expect(etiquetaSimple(http, nombres)).toBe('HTTP GET /');
+    expect(etiquetaSimple({ ...eco, confianza: 'baja' }, nombres)).toBe('Eco ICMP pc1 → pc2 (traducido por NAT)');
   });
 
   it('DHCP: el nombre del cliente sale de su MAC, y la IP entregada se aprende del ACK', () => {

@@ -18,6 +18,8 @@ export function ListaEventos() {
   const enPaso = useMemo(() => new Set(cursor >= 0 && pasos[cursor] ? pasos[cursor].obs.map((o) => o.id) : []), [pasos, cursor]);
   const visibles = useMemo(() => observaciones.filter(predicado({ vista, fondo, filtro, filtroWs })),
     [observaciones, vista, fondo, filtro, filtroWs]);
+  // Número de trama como en Wireshark: posición en el orden de tiempo de TODA la captura.
+  const numero = useMemo(() => new Map(observaciones.map((o, i) => [o.id, i + 1])), [observaciones]);
   const ocultas = vista === 'simple' && !fondo ? observaciones.filter((o) => esRuido(o)).length : 0;
   const contenedor = useRef<HTMLDivElement>(null);
 
@@ -81,7 +83,7 @@ export function ListaEventos() {
             const destino = r.ip?.dst ?? (r.arp ? (r.eth?.dst === 'ff:ff:ff:ff:ff:ff' ? 'Broadcast' : r.eth?.dst) : r.eth?.dst) ?? '';
             return (
               <tr key={o.id} className={clase(o.id)} onClick={() => elegir(o.id)}>
-                <td>{o.seq}</td>
+                <td>{numero.get(o.id)}</td>
                 <td className="num">{(o.t_us / 1e6).toFixed(6)}</td>
                 <td>{origen}</td>
                 <td>{destino}</td>
