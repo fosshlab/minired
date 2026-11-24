@@ -134,6 +134,9 @@ class Enlace(Estricto):
     id: str = Field(pattern=ID_RE)
     a: Extremo
     b: Extremo
+    # Arranca caído (cable suelto), para ejercicios de diagnóstico. "Subir enlace" con la red
+    # en marcha no cambia este valor: el ejercicio se puede repetir.
+    desconectado: bool = False
 
 
 class Lab(Estricto):

@@ -150,7 +150,7 @@ class Controlador:
                 self._cambiar(ERROR, 'no se pudo iniciar la red: %s' % exc)
                 raise
             self.plan, self.red = plan, red
-            self.enlaces_caidos = set()
+            self.enlaces_caidos = {e.id for e in self.lab.enlaces if e.desconectado}
             self._cambiar(ACTIVA)
 
     async def detener(self):
@@ -215,6 +215,9 @@ class Controlador:
         await self.worker.run(lambda: self.red.enlace(enlace_id, arriba))
         if arriba:
             self.enlaces_caidos.discard(enlace_id)
+            if self.captura is not None and self.captura.activa:
+                # tcpdump no abre una interfaz caída: esos extremos esperaban a que se suba.
+                await asyncio.to_thread(self.captura.activar_enlace, enlace_id)
         else:
             self.enlaces_caidos.add(enlace_id)
         self.publicar(self.estado_dict())
@@ -232,7 +235,8 @@ class Controlador:
                 self.captura = None
             red = self.red
             sesion = self.fabrica_captura(self.plan, lambda nodo, argv, **kw: red.popen(nodo, argv, **kw),
-                                          self.publicar, self.directorio_capturas)
+                                          self.publicar, self.directorio_capturas,
+                                          en_espera=set(self.enlaces_caidos))
             try:
                 await self.worker.run(sesion.iniciar)
             except Exception:

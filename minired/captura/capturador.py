@@ -101,7 +101,7 @@ class Capturador:
     def estadisticas(self):
         return {'intf': self.extremo.intf, 'enlace': self.extremo.enlace,
                 'capturados': self.capturados, 'caidos_kernel': self.caidos_kernel,
-                'error': self.error}
+                'error': self.error, 'en_espera': self.proceso is None}
 
     def mensaje_error(self):
         return self._stderr.decode(errors='replace').strip()

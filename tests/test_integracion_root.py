@@ -227,3 +227,36 @@ def test_bajar_y_subir_enlace(tmp_path):
         c.post('/api/enlaces/e1/estado', json={'arriba': False}, headers=AUTH)
         assert c.post('/api/red/detener', headers=AUTH).json()['enlaces_caidos'] == []
     assert not [i for i in os.listdir('/sys/class/net') if i.startswith(('tk1', 'tk2', 'tkr', 'tksw'))]
+
+
+def test_enlace_desconectado_arranca_caido_y_la_captura_lo_espera(tmp_path):
+    """Un enlace "desconectado" arranca caído; la simulación arranca igual (tcpdump no abre una
+    interfaz caída: ese extremo espera) y captura el enlace en cuanto se sube."""
+    lab = lab_3pc(('td1', 'td2', 'td3'), 'tdsw').model_dump(mode='json')
+    lab['enlaces'][1]['desconectado'] = True                         # e2: td2 sin cable
+    ctl = Controlador(RedMininet, directorio_capturas=str(tmp_path))
+    app = crear_app(ctl, Config(puerto=8787, token=TOKEN))
+    with TestClient(app, base_url='http://127.0.0.1:8787') as c:
+        assert c.put('/api/lab', json=lab, headers=AUTH).status_code == 200
+        r = c.post('/api/red/iniciar', headers=AUTH)
+        assert r.status_code == 200, r.text
+        assert r.json()['enlaces_caidos'] == ['e2']
+
+        def ping():
+            return c.post('/api/nodos/pc1/ping', json={'destino': '10.0.0.2'}, headers=AUTH).json()['codigo']
+        assert ping() != 0
+        r = c.post('/api/captura/iniciar', headers=AUTH)
+        assert r.status_code == 200, r.text
+        estado = c.get('/api/estado', headers=AUTH).json()['captura']
+        assert {x['intf'] for x in estado['capturadores'] if x['en_espera']} == {'td2-eth0', 'tdsw-eth2'}
+        assert c.post('/api/enlaces/e2/estado', json={'arriba': True}, headers=AUTH).status_code == 200
+        assert esperar(lambda: ping() == 0, 6)
+        time.sleep(1)
+        estado = c.post('/api/captura/detener', headers=AUTH).json()
+        assert not any(x['en_espera'] for x in estado['capturadores'])
+        items = c.get('/api/captura/observaciones', headers=AUTH).json()['items']
+        assert any(o['enlace'] == 'e2' and o['nodo'] == 'pc2' for o in items)
+        # Subirlo en vivo no cambia el diseño: sigue "desconectado" para la próxima vez.
+        assert c.get('/api/lab', headers=AUTH).json()['enlaces'][1]['desconectado'] is True
+        assert c.post('/api/red/detener', headers=AUTH).json()['enlaces_caidos'] == []
+    assert not [i for i in os.listdir('/sys/class/net') if i.startswith(('td1', 'td2', 'td3', 'tdsw'))]

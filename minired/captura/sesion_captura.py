@@ -21,10 +21,13 @@ class SesionCaptura:
     MAX_OBSERVACIONES = 5000
     INTERVALO_S = 0.1
 
-    def __init__(self, plan, popen, publicar, directorio_base=None, reloj=time.time_ns):
+    def __init__(self, plan, popen, publicar, directorio_base=None, reloj=time.time_ns, en_espera=()):
         """popen(nodo_id, argv, **kw): proceso en el namespace del nodo.
         publicar(dict): envía un evento a la interfaz (debe ser seguro entre hilos).
+        en_espera: enlaces caídos al empezar; tcpdump no abre una interfaz caída
+        ("That device is not up"), así que sus extremos arrancan en activar_enlace().
         """
+        self.en_espera = set(en_espera)
         self.plan = plan
         self._popen = popen
         self._publicar = publicar
@@ -51,15 +54,8 @@ class SesionCaptura:
     def iniciar(self, timeout=5.0):
         self.t0_ns = self._reloj()
         try:
-            for cap in self.capturadores:
-                cap.iniciar(lambda argv, _ep=cap.extremo, **kw: self._popen(_ep.nodo, argv, **kw))
-            limite = time.monotonic() + timeout
-            for cap in self.capturadores:
-                cap.esperar_listo(max(0.0, limite - time.monotonic()))
-                if cap.proceso.poll() is not None:
-                    raise ErrorCaptura('tcpdump en %s terminó: %s' % (cap.extremo.intf, cap.mensaje_error()))
-                if not cap._listo.is_set():
-                    raise ErrorCaptura('tcpdump en %s no empezó a capturar a tiempo' % cap.extremo.intf)
+            activos = [c for c in self.capturadores if c.extremo.enlace not in self.en_espera]
+            self._arrancar(activos, timeout)
         except Exception:
             for cap in self.capturadores:
                 cap.detener()
@@ -67,6 +63,25 @@ class SesionCaptura:
         self.activa = True
         self._ticker = threading.Thread(target=self._bucle, name='captura-correlador', daemon=True)
         self._ticker.start()
+
+    def activar_enlace(self, enlace_id, timeout=5.0):
+        """Arranca los capturadores que esperaban a que este enlace se suba."""
+        if not self.activa or enlace_id not in self.en_espera:
+            return
+        self.en_espera.discard(enlace_id)
+        self._arrancar([c for c in self.capturadores
+                        if c.extremo.enlace == enlace_id and c.proceso is None], timeout)
+
+    def _arrancar(self, capturadores, timeout):
+        for cap in capturadores:
+            cap.iniciar(lambda argv, _ep=cap.extremo, **kw: self._popen(_ep.nodo, argv, **kw))
+        limite = time.monotonic() + timeout
+        for cap in capturadores:
+            cap.esperar_listo(max(0.0, limite - time.monotonic()))
+            if cap.proceso.poll() is not None:
+                raise ErrorCaptura('tcpdump en %s terminó: %s' % (cap.extremo.intf, cap.mensaje_error()))
+            if not cap._listo.is_set():
+                raise ErrorCaptura('tcpdump en %s no empezó a capturar a tiempo' % cap.extremo.intf)
 
     def detener(self):
         if not self.activa:

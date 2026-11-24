@@ -89,6 +89,9 @@ class RedMininet:
             self.directorio = tempfile.mkdtemp(prefix='minired-red-')      # 0700, solo root
             self._configurar()
             self._servicios()
+            for enlace in lab.enlaces:
+                if enlace.desconectado:
+                    self.enlace(enlace.id, False)
         except Exception:
             self.detener()
             raise
