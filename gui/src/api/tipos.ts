@@ -61,6 +61,7 @@ export interface Enlace {
   id: string;
   a: Extremo;
   b: Extremo;
+  desconectado?: boolean;   // arranca caído (cable suelto); "Subir enlace" en vivo no lo cambia
 }
 
 export interface Lab {
@@ -77,13 +78,13 @@ export interface Resumen {
   info: string;
   eth?: { src: string; dst: string; tipo: string };
   arp?: { op: number; sha: string; spa: string; tha: string; tpa: string };
-  ip?: { src: string; dst: string; ttl: number; proto: number; id: number };
+  ip?: { src: string; dst: string; ttl: number; proto: number; id: number; largo?: number };
   icmp?: { tipo: number; codigo: number; ident?: number; seq?: number };
   udp?: { sport: number; dport: number };
   tcp?: { sport: number; dport: number; banderas: string };
   vlan?: { id: number; pcp: number };
   dhcp?: { tipo?: number; xid: string; yiaddr: string; chaddr: string };
-  dns?: { nombre?: string; respuesta: boolean };
+  dns?: { nombre?: string; respuesta: boolean; respuestas?: string[] };
   http?: { linea: string };
   ospf?: { tipo: number };
 }
@@ -154,3 +155,23 @@ export type Evento =
   | { tipo: 'observaciones'; items: Observacion[]; reinicio?: boolean; descartadas_vista?: number }
   | ({ tipo: 'captura'; reinicio?: boolean } & EstadoCaptura)
   | { tipo: 'aviso'; texto: string; perdidos: number };
+
+// Vista OSI estilo Packet Tracer (GET /api/captura/observaciones/{id}/osi), inferida del tráfico real.
+export interface CapaOsi { capa: number; nombre: string; texto: string }
+export type Fuente = 'observado' | 'configuracion' | 'estado' | 'inferido';
+export interface Decision { n: number; capa: number; texto: string; fuente: Fuente }
+export interface VistaOsi {
+  obs: string;
+  paquete: string;
+  dispositivo: string;
+  nombre: string;
+  tipo: TipoNodo | null;
+  desde: string;
+  desde_nombre: string;
+  entrada: CapaOsi[];
+  salidas: { obs: string; intf: string | null; hacia: string; hacia_nombre: string; capas: CapaOsi[] }[];
+  decisiones: Decision[];
+  resultado: 'inundado' | 'reenviado' | 'traducido' | 'entregado' | 'respondido' | 'descartado' | 'sin_salida';
+  origen?: { dispositivo: string; nombre: string; tipo: TipoNodo | null; salida: CapaOsi[]; decisiones: Decision[] };
+  estado_red: string[];
+}

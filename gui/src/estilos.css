@@ -166,3 +166,47 @@ button.chico { font-size: 12px; padding: 2px 8px; margin: 0 0 8px; }
 /* React Flow dibuja un recuadro de grupo sobre la selección que tapa los clics (Shift/Ctrl+clic,
    abrir un nodo). Cada equipo seleccionado ya se resalta y arrastrar uno mueve a todos: se oculta. */
 .react-flow__nodesselection-rect { display: none; pointer-events: none; }
+
+/* Selector Simple/Avanzado y vista OSI (modo simple, estilo Packet Tracer) */
+.selector-vista { display: inline-flex; border: 1px solid #d97706; border-radius: 6px; overflow: hidden; }
+.selector-vista button { border: none; border-radius: 0; padding: 3px 10px; background: #fff; }
+.selector-vista button.activo { background: #d97706; color: #fff; font-weight: 600; }
+.filtro-ws { flex: 1; min-width: 260px; }
+.filtro-ws input { flex: 1; font-family: ui-monospace, monospace; }
+.filtro-ws input.valido { background: #f0fdf4; border-color: #86efac; }
+.filtro-ws input.invalido { background: #fef2f2; border-color: #fca5a5; }
+.nota-fondo { margin: 6px 10px; font-size: 12px; }
+.panel-osi { padding: 12px 14px; font-size: 13px; }
+.panel-osi h3 { margin: 0; font-size: 15px; font-weight: 400; }
+.panel-osi h4 { margin: 10px 0 4px; font-size: 13px; }
+.etiqueta-pdu { margin: 4px 0 8px; font-weight: 600; }
+.pestanas-osi { display: flex; gap: 2px; border-bottom: 1px solid var(--borde); margin-bottom: 8px; }
+.pestanas-osi button { border-radius: 6px 6px 0 0; border-bottom: none; }
+.pestanas-osi button.activa { background: #eff6ff; border-color: #93c5fd; }
+.tabla-osi { width: 100%; border-collapse: collapse; font-size: 12px; table-layout: fixed; }
+.tabla-osi th, .tabla-osi td { border: 1px solid var(--borde); padding: 3px 5px; vertical-align: top; overflow-wrap: anywhere; }
+.tabla-osi th { background: #f1f5f9; text-align: left; }
+.tabla-osi th:first-child, .tabla-osi td.capa-n { width: 74px; }
+.tabla-osi td.capa-n { color: var(--tenue); white-space: nowrap; }
+.tabla-osi tr.vacia td { color: var(--tenue); background: #fafafa; }
+.resultado { display: inline-block; margin: 8px 0 2px; padding: 2px 10px; border-radius: 99px; font-weight: 600; background: #e0f2fe; color: #075985; }
+.resultado-descartado, .resultado-sin_salida { background: #fee2e2; color: #991b1b; }
+.resultado-inundado { background: #fef3c7; color: #92400e; }
+.resultado-traducido { background: #fce7f3; color: #9d174d; }
+.decisiones { padding-left: 20px; margin: 6px 0; }
+.decisiones li { margin-bottom: 5px; line-height: 1.35; }
+.capa-chip { font-size: 10px; font-weight: 700; background: #e2e8f0; border-radius: 3px; padding: 0 4px; }
+.fuente { font-size: 10px; border-radius: 3px; padding: 0 4px; border: 1px solid; white-space: nowrap; cursor: help; }
+.fuente-observado { color: #166534; border-color: #86efac; background: #f0fdf4; }
+.fuente-configuracion { color: #1e40af; border-color: #93c5fd; background: #eff6ff; }
+.fuente-estado { color: #6b21a8; border-color: #d8b4fe; background: #faf5ff; }
+.fuente-inferido { color: #475569; border-color: #cbd5e1; background: #f8fafc; }
+.salidas { flex-wrap: wrap; align-items: center; font-size: 12px; }
+.salidas button.activo { background: #eff6ff; border-color: #93c5fd; }
+.navegar { flex-wrap: wrap; }
+.campos-pdu { margin: 0; }
+.campos-pdu div { display: flex; gap: 8px; padding: 3px 0; border-bottom: 1px dashed var(--borde); }
+.campos-pdu dt { width: 70px; flex: none; font-weight: 600; }
+.campos-pdu dd { margin: 0; font-family: ui-monospace, monospace; font-size: 12px; overflow-wrap: anywhere; }
+.nota-osi { font-size: 11px; margin-top: 10px; }
+.lista-eventos.simple td:last-child { white-space: normal; }

@@ -39,6 +39,7 @@ interface EstadoLab {
   ponerIp: (id: string, puerto: number, ip: string) => void;
   editarInterfaz: (id: string, puerto: number, cambio: Partial<Interfaz>) => void;
   conectar: (origen: string, destino: string) => void;
+  editarEnlace: (id: string, cambio: Partial<Enlace>) => void;
   borrarSeleccion: () => void;
   seleccionar: (s: Seleccion) => void;
   marcar: (m: Marcados) => void;
@@ -143,6 +144,15 @@ export const useLab = create<EstadoLab>((set, get) => ({
       const resto = n.interfaces.filter((i) => i.puerto !== puerto);
       const interfaces = Object.keys(nueva).length > 1 ? [...resto, nueva] : resto;
       return { ...n, interfaces: interfaces.sort((a, b) => a.puerto - b.puerto) };
+    }),
+  })),
+
+  editarEnlace: (id, cambio) => set((s) => ({
+    enlaces: s.enlaces.map((e) => {
+      if (e.id !== id) return e;
+      const nuevo = { ...e, ...cambio };
+      if (!nuevo.desconectado) delete nuevo.desconectado;      // el JSON queda igual que antes
+      return nuevo;
     }),
   })),
 

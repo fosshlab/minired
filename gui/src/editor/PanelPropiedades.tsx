@@ -395,7 +395,7 @@ function PanelVarios() {
 }
 
 function PanelEnlace({ id }: { id: string }) {
-  const { enlaces, nodos, estadoRed, enlacesCaidos, borrarSeleccion, avisar } = useLab();
+  const { enlaces, nodos, estadoRed, enlacesCaidos, borrarSeleccion, avisar, editarEnlace } = useLab();
   const [ocupado, setOcupado] = useState(false);
   const e = enlaces.find((x) => x.id === id)!;
   const a = nodos.find((n) => n.id === e.a.nodo);
@@ -435,8 +435,19 @@ function PanelEnlace({ id }: { id: string }) {
         )
       ) : (
         <>
-          {estadoRed === 'diseño' || estadoRed === 'error'
-            ? <p className="tenue">Bajar y subir el enlace se puede con la red iniciada.</p> : null}
+          {estadoRed === 'diseño' || estadoRed === 'error' ? (
+            <>
+              <label className="casilla">
+                <input type="checkbox" checked={!!e.desconectado} onChange={(ev) => editarEnlace(id, { desconectado: ev.target.checked })} />
+                Arranca desconectado (cable suelto)
+              </label>
+              <p className="tenue">
+                {e.desconectado
+                  ? 'Al iniciar la red este enlace queda caído, para practicar diagnóstico. "Subir enlace" con la red en marcha no cambia el diseño: el ejercicio se puede repetir.'
+                  : 'Bajar y subir el enlace se puede con la red iniciada.'}
+              </p>
+            </>
+          ) : null}
           {estadoRed !== 'iniciando' && estadoRed !== 'deteniendo' && <button className="peligro" onClick={borrarSeleccion}>Eliminar enlace</button>}
         </>
       )}

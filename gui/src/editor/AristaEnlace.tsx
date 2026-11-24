@@ -4,6 +4,7 @@ import type { Nodo } from '../api/tipos';
 import { interfazDe, useLab, nombreIntf } from '../estado/labStore';
 import { useSimulacion } from '../estado/simulacionStore';
 import { colorProtocolo, etiquetaProtocolo } from '../simulacion/reproductor';
+import { etiquetaSimple, nombresDe } from '../simulacion/simple';
 
 export type AristaFlujo = Edge<{ enlace: Enlace; caido?: boolean }, 'enlace'>;
 
@@ -43,6 +44,8 @@ export function AristaEnlace({ id, source, target, data, selected }: EdgeProps<A
   const t = useSimulacion((s) => (enPaso.length ? s.t : 0));
   const seleccion = useSimulacion((s) => s.seleccion);
   const elegir = useSimulacion((s) => s.elegir);
+  const vista = useSimulacion((s) => s.vista);
+  const enlacesLab = useLab((s) => s.enlaces);
   if (!ns || !nt || !data) return null;
 
   const ca = centro(ns);
@@ -66,7 +69,7 @@ export function AristaEnlace({ id, source, target, data, selected }: EdgeProps<A
         <>
           <circle cx={pa.x + ux * 9} cy={pa.y + uy * 9} r="5" className="puerto-caido" />
           <circle cx={pb.x - ux * 9} cy={pb.y - uy * 9} r="5" className="puerto-caido" />
-          <title>Enlace caído (bajado a mano)</title>
+          <title>{data.enlace.desconectado ? 'Cable desconectado (arranca caído)' : 'Enlace caído'}</title>
         </>
       )}
       {largo > 90 && (
@@ -90,7 +93,7 @@ export function AristaEnlace({ id, source, target, data, selected }: EdgeProps<A
         return (
           <g key={o.id} transform={`translate(${x - 21},${y - 12})`} className="sobre"
             onClick={(e) => { e.stopPropagation(); elegir(o.id); }}>
-            <title>{`${o.resumen.info}${suelta ? ' (observación suelta: sin origen correlacionado)' : ''}`}</title>
+            <title>{`${vista === 'simple' ? etiquetaSimple(o, nombresDe({ version: 1, nodos, enlaces: enlacesLab })) : o.resumen.info}${suelta ? ' (observación suelta: sin origen correlacionado)' : ''}`}</title>
             <rect width="42" height="24" rx="4" fill={suelta ? '#fff' : color} stroke={seleccion === o.id ? '#111' : color}
               strokeWidth={seleccion === o.id ? 3 : 2} strokeDasharray={suelta ? '4 3' : undefined} />
             <text x="21" y="16" textAnchor="middle" className="sobre-texto" fill={suelta ? color : '#fff'}>
@@ -108,3 +111,4 @@ export function AristaEnlace({ id, source, target, data, selected }: EdgeProps<A
     </g>
   );
 }
+

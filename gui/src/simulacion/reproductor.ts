@@ -25,10 +25,11 @@ export function pasaFiltro(o: Observacion, filtro: Filtro) {
   }
 }
 
-export function construirPasos(observaciones: Observacion[], filtro: Filtro = 'todos'): Paso[] {
+export function construirPasos(observaciones: Observacion[], filtro: Filtro | ((o: Observacion) => boolean) = 'todos'): Paso[] {
+  const visible = typeof filtro === 'function' ? filtro : (o: Observacion) => pasaFiltro(o, filtro);
   const grupos = new Map<string, Paso>();
   for (const o of observaciones) {
-    if (!pasaFiltro(o, filtro)) continue;
+    if (!visible(o)) continue;
     const clave = `${o.paquete}/${o.profundidad}`;
     const ts = BigInt(o.ts_ns);
     let paso = grupos.get(clave);

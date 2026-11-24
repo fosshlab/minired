@@ -35,8 +35,9 @@ export function Lienzo() {
   const edges: AristaFlujo[] = useMemo(() => enlaces.map((e) => ({
     id: e.id, type: 'enlace', source: e.a.nodo, target: e.b.nodo, sourceHandle: 's', targetHandle: 't',
     selected: marcados.enlaces.includes(e.id),
-    data: { enlace: e, caido: enlacesCaidos.includes(e.id) },
-  })), [enlaces, marcados, enlacesCaidos]);
+    // Con la red en marcha manda el estado real (lo informa el servidor); en diseño, el cable suelto.
+    data: { enlace: e, caido: diseno ? !!e.desconectado : enlacesCaidos.includes(e.id) },
+  })), [enlaces, marcados, enlacesCaidos, diseno]);
 
   // Selección controlada: React Flow emite cambios "select" al hacer clic, Shift/Ctrl+clic o al
   // arrastrar el rectángulo; se aplican sobre los marcados del store.

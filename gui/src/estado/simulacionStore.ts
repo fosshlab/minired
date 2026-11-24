@@ -1,6 +1,20 @@
 import { create } from 'zustand';
 import type { Observacion } from '../api/tipos';
-import { construirPasos, indicePasoDe, type Filtro, type Paso } from '../simulacion/reproductor';
+import { construirPasos, indicePasoDe, pasaFiltro, type Filtro, type Paso } from '../simulacion/reproductor';
+import { compilarFiltro } from '../simulacion/filtroWireshark';
+import { esRuido, type Vista } from '../simulacion/simple';
+
+const CLAVE_VISTA = 'minired.vista';
+function vistaGuardada(): Vista {
+  try { return localStorage.getItem(CLAVE_VISTA) === 'avanzado' ? 'avanzado' : 'simple'; } catch { return 'simple'; }
+}
+
+// Qué observaciones muestra la vista actual. Simple: sin tráfico de fondo (salvo que se pida) y con
+// el filtro por protocolo. Avanzado: el filtro estilo Wireshark (si no compila, se muestra todo).
+export function predicado(s: { vista: Vista; fondo: boolean; filtro: Filtro; filtroWs: string }) {
+  if (s.vista === 'simple') return (o: Observacion) => (s.fondo || !esRuido(o)) && pasaFiltro(o, s.filtro);
+  try { return compilarFiltro(s.filtroWs); } catch { return () => true; }
+}
 
 export type Modo = 'pausa' | 'play' | 'paso';
 
@@ -9,6 +23,9 @@ interface EstadoSimulacion {
   observaciones: Observacion[];  // confirmadas por el correlador, en orden de tiempo
   pasos: Paso[];
   filtro: Filtro;
+  vista: Vista;                  // simple (estilo Packet Tracer) o avanzado (estilo Wireshark)
+  fondo: boolean;                // modo simple: mostrar el tráfico de fondo
+  filtroWs: string;              // modo avanzado: filtro de visualización
   cursor: number;                // paso actual (-1: antes del primero)
   t: number;                     // avance de la animación del paso actual (0..1)
   modo: Modo;
@@ -22,6 +39,9 @@ interface EstadoSimulacion {
   agregar: (items: Observacion[], descartadas?: number) => void;
   reemplazar: (items: Observacion[]) => void;
   setFiltro: (f: Filtro) => void;
+  setVista: (v: Vista) => void;
+  setFondo: (v: boolean) => void;
+  setFiltroWs: (t: string) => void;
   avanzar: (dt: number) => void;
   play: () => void;
   pausa: () => void;
@@ -38,6 +58,9 @@ export const useSimulacion = create<EstadoSimulacion>((set, get) => ({
   observaciones: [],
   pasos: [],
   filtro: 'todos',
+  vista: vistaGuardada(),
+  fondo: false,
+  filtroWs: '',
   cursor: -1,
   t: 0,
   modo: 'play',
@@ -57,16 +80,22 @@ export const useSimulacion = create<EstadoSimulacion>((set, get) => ({
     const observaciones = [...s.observaciones, ...nuevas];
     return {
       observaciones,
-      pasos: construirPasos(observaciones, s.filtro),
+      pasos: construirPasos(observaciones, predicado(s)),
       descartadasVista: descartadas ?? s.descartadasVista,
     };
   }),
 
   reemplazar: (items) => set((s) => ({
-    observaciones: items, pasos: construirPasos(items, s.filtro), cursor: -1, t: 0, seleccion: null,
+    observaciones: items, pasos: construirPasos(items, predicado(s)), cursor: -1, t: 0, seleccion: null,
   })),
 
-  setFiltro: (filtro) => set((s) => ({ filtro, pasos: construirPasos(s.observaciones, filtro), cursor: -1, t: 0 })),
+  setFiltro: (filtro) => set((s) => ({ filtro, pasos: construirPasos(s.observaciones, predicado({ ...s, filtro })), cursor: -1, t: 0 })),
+  setVista: (vista) => {
+    try { localStorage.setItem(CLAVE_VISTA, vista); } catch { /* sin almacenamiento */ }
+    set((s) => ({ vista, pasos: construirPasos(s.observaciones, predicado({ ...s, vista })), cursor: -1, t: 0 }));
+  },
+  setFondo: (fondo) => set((s) => ({ fondo, pasos: construirPasos(s.observaciones, predicado({ ...s, fondo })), cursor: -1, t: 0 })),
+  setFiltroWs: (filtroWs) => set((s) => ({ filtroWs, pasos: construirPasos(s.observaciones, predicado({ ...s, filtroWs })), cursor: -1, t: 0 })),
 
   // Llamado por requestAnimationFrame. Duración de un paso: 1 s / velocidad.
   avanzar: (dt) => {

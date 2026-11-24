@@ -12,6 +12,7 @@ import { PanelPropiedades } from './editor/PanelPropiedades';
 import { BarraReproduccion, useBucleAnimacion } from './simulacion/BarraReproduccion';
 import { ListaEventos } from './simulacion/ListaEventos';
 import { PanelCapas } from './simulacion/PanelCapas';
+import { PanelOsi } from './simulacion/PanelOsi';
 import { TerminalNodo } from './terminal/TerminalNodo';
 
 function procesarEvento(e: Evento) {
@@ -44,6 +45,7 @@ export function App() {
   const { terminales, pestana, setPestana, cerrarTerminal } = usePanel();
   const nodos = useLab((s) => s.nodos);
   const seleccionObs = useSimulacion((s) => s.seleccion);
+  const vistaSim = useSimulacion((s) => s.vista);
   const nObservaciones = useSimulacion((s) => s.observaciones.length);
   const archivo = useRef<HTMLInputElement>(null);
   useBucleAnimacion();
@@ -140,7 +142,7 @@ export function App() {
       <main className="centro">
         <Paleta />
         <ReactFlowProvider><Lienzo /></ReactFlowProvider>
-        <aside className="lateral">{seleccionObs ? <PanelCapas /> : <PanelPropiedades />}</aside>
+        <aside className="lateral">{seleccionObs ? (vistaSim === 'simple' ? <PanelOsi /> : <PanelCapas />) : <PanelPropiedades />}</aside>
       </main>
 
       <section className="inferior">
