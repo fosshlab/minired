@@ -14,13 +14,20 @@ export const PUERTOS: Record<TipoNodo, number[]> = {
 const PREFIJO: Record<TipoNodo, string> = { pc: 'pc', switch: 's', router: 'r', servidor: 'srv' };
 const GUARDADO = 'minired.lab';
 
-export type Seleccion = { tipo: 'nodo' | 'enlace'; id: string } | null;
+import { desdeSeleccion, NINGUNO, quitarMarcados, unica, type Marcados, type Seleccion } from './seleccion';
+export type { Seleccion } from './seleccion';
+
+// Selección única (panel de propiedades) y múltiple (lienzo) siempre coherentes.
+const sel = (seleccion: Seleccion) => ({ seleccion, marcados: desdeSeleccion(seleccion) });
 
 interface EstadoLab {
   nodos: Nodo[];
   enlaces: Enlace[];
   seleccion: Seleccion;
+  marcados: Marcados;
   estadoRed: EstadoRed;
+  enlacesCaidos: string[];      // bajados con "Bajar enlace" (los informa el servidor)
+  cargas: number;               // sube con cada laboratorio cargado: el lienzo vuelve a encuadrar
   errorRed: string | null;
   captura: EstadoCaptura | null;
   conectado: boolean;
@@ -34,6 +41,7 @@ interface EstadoLab {
   conectar: (origen: string, destino: string) => void;
   borrarSeleccion: () => void;
   seleccionar: (s: Seleccion) => void;
+  marcar: (m: Marcados) => void;
   cargar: (lab: Lab) => void;
   lab: () => Lab;
   avisar: (texto: string, tipo?: 'error' | 'info', detalles?: string[]) => void;
@@ -95,7 +103,10 @@ export const useLab = create<EstadoLab>((set, get) => ({
   nodos: inicial.nodos,
   enlaces: inicial.enlaces,
   seleccion: null,
+  marcados: NINGUNO,
   estadoRed: 'diseño',
+  enlacesCaidos: [],
+  cargas: 0,
   errorRed: null,
   captura: null,
   conectado: false,
@@ -110,7 +121,7 @@ export const useLab = create<EstadoLab>((set, get) => ({
       const ip = siguienteIpPc(s.nodos);
       if (ip) nodo.interfaces = [{ puerto: 0, ip }];
     }
-    return { nodos: [...s.nodos, nodo], seleccion: { tipo: 'nodo', id: nodo.id } };
+    return { nodos: [...s.nodos, nodo], ...sel({ tipo: 'nodo', id: nodo.id }) };
   }),
 
   moverNodo: (id, x, y) => set((s) => ({
@@ -155,25 +166,17 @@ export const useLab = create<EstadoLab>((set, get) => ({
       a: { nodo: a.id, puerto: pa },
       b: { nodo: b.id, puerto: pb },
     };
-    set({ enlaces: [...s.enlaces, enlace], seleccion: { tipo: 'enlace', id: enlace.id } });
+    set({ enlaces: [...s.enlaces, enlace], ...sel({ tipo: 'enlace', id: enlace.id }) });
   },
 
-  borrarSeleccion: () => set((s) => {
-    if (!s.seleccion) return {};
-    if (s.seleccion.tipo === 'enlace') {
-      return { enlaces: s.enlaces.filter((e) => e.id !== s.seleccion!.id), seleccion: null };
-    }
-    const id = s.seleccion.id;
-    return {
-      nodos: s.nodos.filter((n) => n.id !== id),
-      enlaces: s.enlaces.filter((e) => e.a.nodo !== id && e.b.nodo !== id),
-      seleccion: null,
-    };
-  }),
+  // Borra lo marcado (uno o varios equipos y enlaces) y los enlaces de esos equipos.
+  borrarSeleccion: () => set((s) => ({ ...quitarMarcados(s, s.marcados), ...sel(null) })),
 
-  seleccionar: (seleccion) => set({ seleccion }),
+  seleccionar: (seleccion) => set(sel(seleccion)),
 
-  cargar: (lab) => set({ nodos: lab.nodos, enlaces: lab.enlaces, seleccion: null }),
+  marcar: (marcados) => set({ marcados, seleccion: unica(marcados) }),
+
+  cargar: (lab) => set((s) => ({ nodos: lab.nodos, enlaces: lab.enlaces, cargas: s.cargas + 1, ...sel(null) })),
 
   lab: () => ({ version: 1, nodos: get().nodos, enlaces: get().enlaces }),
 

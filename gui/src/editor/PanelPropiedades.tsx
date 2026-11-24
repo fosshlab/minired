@@ -2,17 +2,20 @@ import { useState } from 'react';
 import { api, ErrorApi } from '../api/cliente';
 import type { Diagnostico, Interfaz, Nodo, ReglaACL, Servicios } from '../api/tipos';
 import { interfazDe, nombreIntf, useLab } from '../estado/labStore';
+import { enlacesAfectados, textoConfirmacion } from '../estado/seleccion';
 import { usePanel } from '../estado/panelStore';
 import { NOMBRE_TIPO } from './iconos';
 
 export function PanelPropiedades() {
-  const { seleccion, nodos, enlaces, estadoRed } = useLab();
+  const { seleccion, marcados, nodos, enlaces, estadoRed } = useLab();
+  if (marcados.nodos.length + marcados.enlaces.length > 1) return <PanelVarios />;
   if (!seleccion) {
     return (
       <div className="panel-vacio">
         <p>Elegí un equipo o un enlace para ver sus datos.</p>
         <p className="tenue">Flujo: armá la red → <b>Iniciar red</b> → abrí terminales → activá <b>Simulación</b> y hacé un <code>ping -c 1</code>.</p>
         <p className="tenue">¿Primera vez? Probá uno de los <b>Ejemplos</b> de la barra superior.</p>
+        <p className="tenue">Para elegir varios equipos, arrastrá en el fondo del lienzo un rectángulo, o usá Shift/Ctrl+clic.</p>
       </div>
     );
   }
@@ -361,32 +364,81 @@ function NodoActivo({ nodo }: { nodo: Nodo }) {
   );
 }
 
+// Borrado en bloque: pide confirmación y solo con la red detenida.
+export function confirmarYBorrar() {
+  const s = useLab.getState();
+  if (s.estadoRed !== 'diseño' && s.estadoRed !== 'error') return;
+  if (s.marcados.nodos.length + s.marcados.enlaces.length === 0) return;
+  if (window.confirm(textoConfirmacion(s.marcados, s))) s.borrarSeleccion();
+}
+
+function PanelVarios() {
+  const { marcados, nodos, enlaces, estadoRed, seleccionar } = useLab();
+  const diseno = estadoRed === 'diseño' || estadoRed === 'error';
+  const nombres = nodos.filter((n) => marcados.nodos.includes(n.id)).map((n) => n.nombre);
+  const nEnlaces = enlacesAfectados(marcados, enlaces).length;
+  return (
+    <div className="propiedades">
+      <h3>{nombres.length} equipos y {marcados.enlaces.length} enlaces seleccionados</h3>
+      {nombres.length > 0 && <p className="lista-nombres">{nombres.map((n) => <code key={n}>{n}</code>)}</p>}
+      <p className="tenue">Arrastrá cualquiera de ellos para moverlos juntos. Shift/Ctrl+clic suma o quita uno.</p>
+      {diseno ? (
+        <button className="peligro" onClick={confirmarYBorrar}>
+          Eliminar selección ({nombres.length} equipos, {nEnlaces} enlaces)
+        </button>
+      ) : (
+        <p className="tenue">Para borrar, detené la red.</p>
+      )}
+      <button onClick={() => seleccionar(null)}>Quitar selección</button>
+    </div>
+  );
+}
+
 function PanelEnlace({ id }: { id: string }) {
-  const { enlaces, nodos, estadoRed, borrarSeleccion, avisar } = useLab();
+  const { enlaces, nodos, estadoRed, enlacesCaidos, borrarSeleccion, avisar } = useLab();
+  const [ocupado, setOcupado] = useState(false);
   const e = enlaces.find((x) => x.id === id)!;
   const a = nodos.find((n) => n.id === e.a.nodo);
   const b = nodos.find((n) => n.id === e.b.nodo);
   const activa = estadoRed === 'activa';
+  const caido = enlacesCaidos.includes(id);
   const cambiar = async (arriba: boolean) => {
+    setOcupado(true);
     try {
       await api.post(`/api/enlaces/${id}/estado`, { arriba });
-      avisar(`Enlace ${id} ${arriba ? 'levantado' : 'bajado'}`, 'info');
+      // El servidor publica el estado nuevo por WebSocket; se refleja ya para no esperar.
+      useLab.setState((s) => ({
+        enlacesCaidos: arriba ? s.enlacesCaidos.filter((x) => x !== id) : [...new Set([...s.enlacesCaidos, id])],
+      }));
     } catch (err) {
       avisar(err instanceof ErrorApi ? err.message : String(err));
+    } finally {
+      setOcupado(false);
     }
   };
   return (
     <div className="propiedades">
       <h3>Enlace {id}</h3>
       <p><code>{nombreIntf(a, e.a.puerto)}</code> ↔ <code>{nombreIntf(b, e.b.puerto)}</code></p>
+      {activa && (
+        <p>Estado: <span className={`estado-enlace ${caido ? 'abajo' : 'arriba'}`}>{caido ? 'caído' : 'arriba'}</span></p>
+      )}
       <p className="tenue">Par veth. En simulación se captura lo que llega a cada extremo.</p>
       {activa ? (
-        <div className="fila">
-          <button onClick={() => cambiar(false)}>Bajar enlace</button>
-          <button onClick={() => cambiar(true)}>Subir enlace</button>
-        </div>
+        caido ? (
+          <>
+            <p className="tenue">Las dos interfaces están apagadas (<code>ip link set down</code>): no pasa tráfico, como un cable desenchufado.</p>
+            <button className="primario" disabled={ocupado} onClick={() => cambiar(true)}>Subir enlace</button>
+          </>
+        ) : (
+          <button disabled={ocupado} onClick={() => cambiar(false)}>Bajar enlace</button>
+        )
       ) : (
-        estadoRed !== 'iniciando' && estadoRed !== 'deteniendo' && <button className="peligro" onClick={borrarSeleccion}>Eliminar enlace</button>
+        <>
+          {estadoRed === 'diseño' || estadoRed === 'error'
+            ? <p className="tenue">Bajar y subir el enlace se puede con la red iniciada.</p> : null}
+          {estadoRed !== 'iniciando' && estadoRed !== 'deteniendo' && <button className="peligro" onClick={borrarSeleccion}>Eliminar enlace</button>}
+        </>
       )}
     </div>
   );

@@ -1,22 +1,26 @@
-import { useCallback, useMemo, type DragEvent } from 'react';
+import { useCallback, useEffect, useMemo, type DragEvent } from 'react';
 import {
-  Background, ConnectionMode, Controls, ReactFlow, useReactFlow,
-  type Connection, type NodeChange,
+  Background, ConnectionMode, Controls, ReactFlow, SelectionMode, useNodesInitialized, useReactFlow,
+  type Connection, type EdgeChange, type NodeChange,
 } from '@xyflow/react';
 import type { TipoNodo } from '../api/tipos';
 import { useLab } from '../estado/labStore';
+import { aplicarCambios, soltarEnlacesDe, type CambioSeleccion } from '../estado/seleccion';
 import { useSimulacion } from '../estado/simulacionStore';
 import { AristaEnlace, type AristaFlujo } from './AristaEnlace';
 import { NodoRed, type NodoFlujo } from './NodoRed';
+import { confirmarYBorrar } from './PanelPropiedades';
 
 const tiposNodo = { red: NodoRed };
 const tiposArista = { enlace: AristaEnlace };
 
 export function Lienzo() {
-  const { nodos, enlaces, seleccion, estadoRed, moverNodo, seleccionar, conectar, agregarNodo } = useLab();
+  const { nodos, enlaces, marcados, enlacesCaidos, estadoRed, moverNodo, seleccionar, marcar, conectar, agregarNodo } = useLab();
   const paso = useSimulacion((s) => (s.activo && s.cursor >= 0 ? s.pasos[s.cursor] : null));
   const t = useSimulacion((s) => s.t);
-  const { screenToFlowPosition } = useReactFlow();
+  const { screenToFlowPosition, fitView } = useReactFlow();
+  const cargas = useLab((s) => s.cargas);
+  const medidos = useNodesInitialized();
   const diseno = estadoRed === 'diseño' || estadoRed === 'error';
 
   const receptores = useMemo(
@@ -24,26 +28,57 @@ export function Lienzo() {
 
   const nodes: NodoFlujo[] = useMemo(() => nodos.map((n) => ({
     id: n.id, type: 'red', position: { x: n.x, y: n.y },
-    selected: seleccion?.tipo === 'nodo' && seleccion.id === n.id,
+    selected: marcados.nodos.includes(n.id),
     data: { nodo: n, conectable: diseno, recibe: receptores.has(n.id) },
-  })), [nodos, seleccion, diseno, receptores]);
+  })), [nodos, marcados, diseno, receptores]);
 
   const edges: AristaFlujo[] = useMemo(() => enlaces.map((e) => ({
     id: e.id, type: 'enlace', source: e.a.nodo, target: e.b.nodo, sourceHandle: 's', targetHandle: 't',
-    selected: seleccion?.tipo === 'enlace' && seleccion.id === e.id,
-    data: { enlace: e },
-  })), [enlaces, seleccion]);
+    selected: marcados.enlaces.includes(e.id),
+    data: { enlace: e, caido: enlacesCaidos.includes(e.id) },
+  })), [enlaces, marcados, enlacesCaidos]);
 
+  // Selección controlada: React Flow emite cambios "select" al hacer clic, Shift/Ctrl+clic o al
+  // arrastrar el rectángulo; se aplican sobre los marcados del store.
   const alCambiarNodos = useCallback((cambios: NodeChange<NodoFlujo>[]) => {
+    const sel: CambioSeleccion[] = [];
     for (const c of cambios) {
       if (c.type === 'position' && c.position) moverNodo(c.id, Math.round(c.position.x), Math.round(c.position.y));
-      if (c.type === 'select' && c.selected) seleccionar({ tipo: 'nodo', id: c.id });
+      if (c.type === 'select') sel.push(c);
     }
-  }, [moverNodo, seleccionar]);
+    if (sel.length) {
+      const { marcados: m, enlaces: todos } = useLab.getState();
+      const quitados = sel.filter((c) => !c.selected).map((c) => c.id);
+      marcar(soltarEnlacesDe(aplicarCambios(m, 'nodos', sel), quitados, todos));
+    }
+  }, [moverNodo, marcar]);
+
+  const alCambiarAristas = useCallback((cambios: EdgeChange<AristaFlujo>[]) => {
+    const sel = cambios.filter((c): c is CambioSeleccion & EdgeChange<AristaFlujo> => c.type === 'select');
+    if (sel.length) marcar(aplicarCambios(useLab.getState().marcados, 'enlaces', sel));
+  }, [marcar]);
 
   const alConectar = useCallback((c: Connection) => {
     if (c.source && c.target) conectar(c.source, c.target);
   }, [conectar]);
+
+  // Al cargar un ejemplo o un archivo, encuadrar cuando React Flow ya midió los nodos nuevos
+  // (antes, la vista quedaba como estaba y la red podía quedar fuera de pantalla).
+  useEffect(() => {
+    if (cargas && medidos) fitView({ padding: 0.3, maxZoom: 1.2 });
+  }, [cargas, medidos, fitView]);
+
+  // Supr / Delete borra la selección (con confirmación), salvo mientras se escribe en un campo.
+  useEffect(() => {
+    const tecla = (e: KeyboardEvent) => {
+      if (e.key !== 'Delete') return;
+      const t = e.target as HTMLElement | null;
+      if (t && (t.closest('input, textarea, select, .xterm') || t.isContentEditable)) return;
+      confirmarYBorrar();
+    };
+    window.addEventListener('keydown', tecla);
+    return () => window.removeEventListener('keydown', tecla);
+  }, []);
 
   const alSoltar = (e: DragEvent) => {
     e.preventDefault();
@@ -61,9 +96,18 @@ export function Lienzo() {
         nodeTypes={tiposNodo}
         edgeTypes={tiposArista}
         onNodesChange={alCambiarNodos}
+        onEdgesChange={alCambiarAristas}
         onConnect={alConectar}
-        onEdgeClick={(_, e) => seleccionar({ tipo: 'enlace', id: e.id })}
         onPaneClick={() => seleccionar(null)}
+        onPaneContextMenu={(e) => e.preventDefault()}
+        // Como en Packet Tracer: arrastrar en el fondo dibuja un rectángulo de selección.
+        // La vista se mueve con el botón del medio o el derecho, o con la barra espaciadora.
+        selectionOnDrag
+        selectionMode={SelectionMode.Partial}
+        panOnDrag={[1, 2]}
+        panActivationKeyCode="Space"
+        multiSelectionKeyCode={['Shift', 'Control', 'Meta']}
+        selectionKeyCode={null}
         connectionMode={ConnectionMode.Loose}
         connectionRadius={40}
         nodesConnectable={diseno}

@@ -24,6 +24,10 @@ export function Paleta() {
       <p className="paleta-ayuda">
         {diseno ? 'Para conectar, arrastrá desde el punto verde de un equipo hasta otro.' : 'Red en marcha: el diseño está bloqueado.'}
       </p>
+      <p className="paleta-ayuda">
+        Fondo + arrastrar: elegir varios (Shift/Ctrl+clic suma o quita).
+        Mover la vista: botón derecho o espacio + arrastrar.
+      </p>
     </aside>
   );
 }

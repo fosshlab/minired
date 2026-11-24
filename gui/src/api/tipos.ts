@@ -149,7 +149,8 @@ export interface DetalleCapas {
 
 export type Evento =
   | { tipo: 'estado'; estado: EstadoRed; error: string | null;
-      enlaces: Record<string, { a: string; b: string }> | null; captura: EstadoCaptura | null }
+      enlaces: Record<string, { a: string; b: string }> | null; captura: EstadoCaptura | null;
+      enlaces_caidos?: string[] }
   | { tipo: 'observaciones'; items: Observacion[]; reinicio?: boolean; descartadas_vista?: number }
   | ({ tipo: 'captura'; reinicio?: boolean } & EstadoCaptura)
   | { tipo: 'aviso'; texto: string; perdidos: number };

@@ -61,6 +61,14 @@ export function AristaEnlace({ id, source, target, data, selected }: EdgeProps<A
     <g className={`arista${selected ? ' seleccionada' : ''}${activo ? ' activa' : ''}${data.caido ? ' caida' : ''}`}>
       <path d={`M${pa.x},${pa.y} L${pb.x},${pb.y}`} className="arista-zona" />
       <path id={`arista-${id}`} d={`M${pa.x},${pa.y} L${pb.x},${pb.y}`} className="arista-linea" />
+      {data.caido && (
+        // Como el puerto apagado de Packet Tracer: una marca roja en cada extremo.
+        <>
+          <circle cx={pa.x + ux * 9} cy={pa.y + uy * 9} r="5" className="puerto-caido" />
+          <circle cx={pb.x - ux * 9} cy={pb.y - uy * 9} r="5" className="puerto-caido" />
+          <title>Enlace caído (bajado a mano)</title>
+        </>
+      )}
       {largo > 90 && (
         <>
           <text x={pa.x + ux * 26} y={pa.y + uy * 26 - 6} className="arista-puerto" textAnchor="middle">

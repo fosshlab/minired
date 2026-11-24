@@ -19,7 +19,8 @@ function procesarEvento(e: Evento) {
   const sim = useSimulacion.getState();
   if (e.tipo === 'estado') {
     const antes = lab.estadoRed;
-    useLab.setState({ estadoRed: e.estado, errorRed: e.error, captura: e.captura });
+    useLab.setState({ estadoRed: e.estado, errorRed: e.error, captura: e.captura,
+      enlacesCaidos: e.estado === 'activa' ? e.enlaces_caidos ?? [] : [] });
     if (e.estado !== 'activa' && antes === 'activa') usePanel.getState().cerrarTodas();
     if (e.estado === 'diseño' || e.estado === 'error') sim.setActivo(false);
     else if (e.captura?.activa) sim.setActivo(true);
