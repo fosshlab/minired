@@ -185,3 +185,45 @@ def test_router_entre_dos_redes(tmp_path):
         assert eco[1]['padre'] == eco[0]['id'] and eco[1]['paquete'] == eco[0]['paquete']
         assert c.post('/api/red/detener', headers=AUTH).json()['estado'] == 'diseño'
     assert not [i for i in os.listdir('/sys/class/net') if i.startswith(('tq', 'tr1'))]
+
+
+def test_bajar_y_subir_enlace(tmp_path):
+    """Bajar un enlace corta el tráfico y se informa; al subirlo vuelve todo, gateway incluido."""
+    from minired.modelo.topologia import Lab
+    lab = Lab.model_validate({'version': 1, 'nodos': [
+        {'id': 'h1', 'tipo': 'pc', 'nombre': 'tk1', 'interfaces': [{'puerto': 0, 'ip': '10.7.1.1/24'}],
+         'gateway': '10.7.1.254'},
+        {'id': 'sw', 'tipo': 'switch', 'nombre': 'tksw'},
+        {'id': 'r', 'tipo': 'router', 'nombre': 'tkr', 'interfaces': [
+            {'puerto': 0, 'ip': '10.7.1.254/24'}, {'puerto': 1, 'ip': '10.7.2.254/24'}]},
+        {'id': 'h2', 'tipo': 'pc', 'nombre': 'tk2', 'interfaces': [{'puerto': 0, 'ip': '10.7.2.1/24'}],
+         'gateway': '10.7.2.254'}],
+        'enlaces': [{'id': 'e1', 'a': {'nodo': 'h1', 'puerto': 0}, 'b': {'nodo': 'sw', 'puerto': 1}},
+                    {'id': 'e2', 'a': {'nodo': 'sw', 'puerto': 2}, 'b': {'nodo': 'r', 'puerto': 0}},
+                    {'id': 'e3', 'a': {'nodo': 'r', 'puerto': 1}, 'b': {'nodo': 'h2', 'puerto': 0}}]})
+    ctl = Controlador(RedMininet, directorio_capturas=str(tmp_path))
+    app = crear_app(ctl, Config(puerto=8787, token=TOKEN))
+
+    def ping():
+        return c.post('/api/nodos/h1/ping', json={'destino': '10.7.2.1'}, headers=AUTH).json()['codigo']
+
+    def rutas(nodo):
+        p = ctl.red.popen(nodo, ['ip', 'route'], stdout=subprocess.PIPE)
+        return p.communicate(timeout=5)[0].decode()
+
+    with TestClient(app, base_url='http://127.0.0.1:8787') as c:
+        assert c.put('/api/lab', json=lab.model_dump(mode='json'), headers=AUTH).status_code == 200
+        assert c.post('/api/red/iniciar', headers=AUTH).status_code == 200
+        assert esperar(lambda: ping() == 0, 6)
+        for enlace in ('e1', 'e3'):            # lado PC (con gateway) y lado router
+            r = c.post('/api/enlaces/%s/estado' % enlace, json={'arriba': False}, headers=AUTH)
+            assert r.status_code == 200, r.text
+            assert c.get('/api/estado', headers=AUTH).json()['enlaces_caidos'] == [enlace]
+            assert ping() != 0
+            assert c.post('/api/enlaces/%s/estado' % enlace, json={'arriba': True}, headers=AUTH).status_code == 200
+            assert c.get('/api/estado', headers=AUTH).json()['enlaces_caidos'] == []
+            assert 'default via 10.7.1.254' in rutas('h1') and 'default via 10.7.2.254' in rutas('h2')
+            assert esperar(lambda: ping() == 0, 6), 'no vuelve la conectividad al subir %s' % enlace
+        c.post('/api/enlaces/e1/estado', json={'arriba': False}, headers=AUTH)
+        assert c.post('/api/red/detener', headers=AUTH).json()['enlaces_caidos'] == []
+    assert not [i for i in os.listdir('/sys/class/net') if i.startswith(('tk1', 'tk2', 'tkr', 'tksw'))]

@@ -99,6 +99,7 @@ class Controlador:
         self.red = None
         self.captura = None
         self.terminales = set()
+        self.enlaces_caidos = set()   # enlaces bajados a mano con la red activa
         self.bus = None
         self._candado = asyncio.Lock()
 
@@ -115,6 +116,7 @@ class Controlador:
             'estado': self.estado,
             'error': self.error,
             'enlaces': self.plan.mapa_publico() if self.plan else None,
+            'enlaces_caidos': sorted(self.enlaces_caidos),
             'captura': self.captura.estado() if self.captura else None,
         }
 
@@ -148,6 +150,7 @@ class Controlador:
                 self._cambiar(ERROR, 'no se pudo iniciar la red: %s' % exc)
                 raise
             self.plan, self.red = plan, red
+            self.enlaces_caidos = set()
             self._cambiar(ACTIVA)
 
     async def detener(self):
@@ -170,6 +173,7 @@ class Controlador:
                     self.captura = None
                 self.red = None
                 self.plan = None
+                self.enlaces_caidos = set()
             self._cambiar(DISENO)
 
     async def apagar(self):
@@ -209,6 +213,12 @@ class Controlador:
         if enlace_id not in self.plan.enlaces:
             raise KeyError(enlace_id)
         await self.worker.run(lambda: self.red.enlace(enlace_id, arriba))
+        if arriba:
+            self.enlaces_caidos.discard(enlace_id)
+        else:
+            self.enlaces_caidos.add(enlace_id)
+        self.publicar(self.estado_dict())
+        return self.estado_dict()
 
     # --- captura (modo simulación) -----------------------------------------
 

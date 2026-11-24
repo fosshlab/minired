@@ -46,6 +46,7 @@ class RedMininet:
         self.net = None
         self._nodos = {}            # id -> nodo Mininet
         self._netns = {}            # id -> inodo del namespace de red (nodos con namespace)
+        self._rutas_guardadas = {}  # id -> rutas a reponer al subir un enlace
         self._procesos = []         # servicios lanzados (FRR, dnsmasq, HTTP, udhcpc)
         self.directorio = None      # archivos privados de los nodos (frr.conf, leases, logs)
 
@@ -394,11 +395,35 @@ class RedMininet:
         return r
 
     def enlace(self, enlace_id, arriba):
+        """Baja o sube los dos extremos de un enlace (como desenchufar el cable).
+
+        Al bajar una interfaz, Linux borra las rutas que salen por ella (gateway, estáticas,
+        la que dejó el DHCP) y al subirla no las repone: se guardan antes y se reponen después.
+        Las rutas que instala FRR (con "proto") las repone zebra.
+        """
         a, b = self.plan.enlaces[enlace_id]
+        if not arriba:
+            for ep in (a, b):
+                if ep.tipo != TipoNodo.switch:
+                    self._rutas_guardadas.setdefault(ep.nodo, set()).update(self._rutas_manuales(ep.nodo))
         for ep in (a, b):
             self._ejecutar(self.nodo(ep.nodo), ['ip', 'link', 'set', 'dev', ep.intf,
                                                 'up' if arriba else 'down'])
+        if arriba:
+            for ep in (a, b):
+                for ruta in sorted(self._rutas_guardadas.get(ep.nodo, ()), key=lambda r: r[0] == 'default'):
+                    # tolerar: la ruta puede salir por otro enlace que sigue caído
+                    self._ejecutar(self.nodo(ep.nodo), ['ip', 'route', 'replace', *ruta], tolerar=True)
 
+    def _rutas_manuales(self, nodo_id):
+        """Rutas IPv4 del nodo que no son de una red conectada ni de FRR (sin 'proto' ni 'scope link')."""
+        salida = self._ejecutar(self.nodo(nodo_id), ['ip', '-4', 'route', 'show'])
+        rutas = set()
+        for linea in salida.splitlines():
+            partes = tuple(linea.split())
+            if partes and 'proto' not in partes and 'scope' not in partes and 'via' in partes:
+                rutas.add(partes)
+        return rutas
 
 def _cola(ruta, maximo=600):
     try:
